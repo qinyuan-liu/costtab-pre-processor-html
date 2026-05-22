@@ -1,0 +1,14 @@
+# Local examples and real project files should not be committed.
+local_files/
+examples/
+*.xlsx
+*.xlsm
+*.xls
+*.pdf
+~$*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
