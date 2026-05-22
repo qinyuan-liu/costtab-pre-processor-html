@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Costtab Pre-processer</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #5b6472;
+      --line: #d0d7de;
+      --line-strong: #1f2937;
+      --accent: #1f5fbf;
+      --accent-soft: #eef4ff;
+      --danger: #b00020;
+      --danger-soft: #fdecef;
+      --warn: #8a5a00;
+      --warn-soft: #fff7e6;
+      --ok: #0f6b4f;
+      --ok-soft: #e8f5f0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) repeat(2, minmax(180px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.85fr) repeat(2, minmax(92px, 0.42fr)) minmax(360px, 2fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .top-grid .field {
+      grid-template-rows: 16px 38px 16px;
+    }
+
+    label,
+    .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 0;
+      background: #ffffff;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    input.invalid,
+    select.invalid {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .status {
+      padding: 11px 13px;
+      border: 1px solid var(--line-strong);
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      min-height: 58px;
+    }
+
+    .status.info {
+      background: #ffffff;
+    }
+
+    .status.success {
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .status.warning {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .status.error {
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .summary-error,
+    .base-warning,
+    .project-match {
+      display: none;
+      color: var(--danger);
+      font-weight: 700;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .summary-error.show,
+    .base-warning.show {
+      display: block;
+    }
+
+    .project-match.show {
+      display: flex;
+    }
+
+    .project-match {
+      color: var(--ok);
+      background: var(--ok-soft);
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      min-height: 36px;
+      align-self: end;
+      align-items: center;
+    }
+
+    .th-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .th-group select {
+      width: auto;
+      min-width: 210px;
+      min-height: 30px;
+      padding: 4px 7px;
+      font-size: 12px;
+      font-weight: 400;
+      background: #ffffff;
+    }
+
+    .table-tools {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .table-tools .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      max-height: 62vh;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 7px;
+      vertical-align: top;
+      background: #ffffff;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    th {
+      position: static;
+      background: #f2f4f7;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+
+    .component-cell {
+      width: 350px;
+      min-width: 350px;
+    }
+
+    .subcomponent-cell {
+      width: 420px;
+      min-width: 420px;
+    }
+
+    .letter-cell {
+      width: 70px;
+      min-width: 70px;
+    }
+
+    .money-cell {
+      width: 92px;
+      min-width: 92px;
+    }
+
+    .source-cell {
+      width: 128px;
+      min-width: 128px;
+    }
+
+    .action-cell {
+      width: 38px;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .row-action-button {
+      width: 24px;
+      min-width: 24px;
+      height: 24px;
+      min-height: 24px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      color: var(--accent);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .delete-row-button {
+      color: var(--danger);
+      margin-top: 4px;
+    }
+
+    .number-tag {
+      display: inline-block;
+      width: 30px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .component-input,
+    .subcomponent-input {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 6px;
+      align-items: start;
+    }
+
+    .inline-check {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .inline-check input {
+      width: 14px;
+      height: 14px;
+      min-height: 14px;
+      padding: 0;
+    }
+
+    .error-text {
+      min-height: 16px;
+      margin-top: 4px;
+      color: var(--danger);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .warning-text {
+      min-height: 16px;
+      margin-top: 4px;
+      color: var(--warn);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .pm-warning {
+      min-height: 16px;
+      margin-top: 4px;
+      color: var(--danger);
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 0;
+      padding: 11px 15px;
+      min-height: 38px;
+      background: #e5e7eb;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .preview-table {
+      min-width: 720px;
+      font-size: 12px;
+    }
+
+    .preview-table th,
+    .preview-table td {
+      padding: 6px 8px;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 920px) {
+      .top-grid,
+      .setup-grid,
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .table-wrap {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Costtab Pre-processer</h1>
+
+    <section class="panel">
+      <div class="panel-body top-grid">
+        <div class="field">
+          <label for="fileInput">Raw costtab file</label>
+          <input id="fileInput" type="file" accept=".xlsx,.xlsm,.xlsb,.xls">
+        </div>
+        <div class="field">
+          <label for="projectIdInput">Project ID</label>
+          <input id="projectIdInput" type="text" autocomplete="off" required>
+          <div class="error-text" data-error-for="projectIdInput"></div>
+        </div>
+        <div id="projectMatchBox" class="project-match"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-body setup-grid">
+        <div class="field">
+          <label for="summarySelect">Summary tab</label>
+          <select id="summarySelect" disabled></select>
+          <div id="summaryError" class="summary-error">No component financing summary found. Please flag this in the tracking file and skip this project.</div>
+          <div class="error-text" data-error-for="summarySelect"></div>
+        </div>
+        <div class="field">
+          <label for="componentColumnInput">Component column</label>
+          <input id="componentColumnInput" type="text" maxlength="3" placeholder="For example B" autocomplete="off">
+          <div class="error-text" data-error-for="componentColumnInput"></div>
+        </div>
+        <div class="field">
+          <label for="subcomponentColumnInput">Subcomponent column</label>
+          <input id="subcomponentColumnInput" type="text" maxlength="3" placeholder="For example C" autocomplete="off">
+          <div class="error-text" data-error-for="subcomponentColumnInput"></div>
+        </div>
+        <div id="statusBox" class="status info">Waiting for a raw costtab file.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-body">
+        <div class="table-tools">
+          <div class="meta" id="mappingMeta">No workbook loaded.</div>
+          <div class="actions" style="margin-top:0">
+            <button id="checkButton" type="button">Check</button>
+            <button id="generateButton" class="primary" type="button" disabled>Generate formatted costtab</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="action-cell" rowspan="2"></th>
+                <th class="component-cell" rowspan="2">component text</th>
+                <th class="subcomponent-cell" rowspan="2">subcomponent text</th>
+                <th colspan="2">detail columns</th>
+                <th colspan="3">
+                  <div class="th-group">
+                    <span>Investment</span>
+                    <select id="investmentMeasureSelect">
+                      <option value="Totals Including Contingencies" selected>Totals Including Contingencies</option>
+                      <option value="Base Cost">Base Cost</option>
+                    </select>
+                  </div>
+                  <div id="globalBaseWarning" class="base-warning">Please flag this in the tracking file</div>
+                </th>
+                <th class="source-cell" rowspan="2">source tab</th>
+              </tr>
+              <tr>
+                <th class="letter-cell">start</th>
+                <th class="letter-cell">end</th>
+                <th class="money-cell">column</th>
+                <th class="money-cell">currency</th>
+                <th class="money-cell">unit</th>
+              </tr>
+            </thead>
+            <tbody id="mappingBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-body preview-grid">
+        <div class="field">
+          <label for="previewSelect">Source preview</label>
+          <select id="previewSelect" disabled></select>
+        </div>
+        <div class="table-wrap" style="max-height:260px">
+          <table class="preview-table">
+            <thead id="previewHead"></thead>
+            <tbody id="previewBody">
+              <tr><td>No source tab selected.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./vendor/xlsx.full.min.js"></script>
+  <script src="./vendor/exceljs.min.js"></script>
+  <script>
+    const NO_SUMMARY_MESSAGE = "No component financing summary found. Please flag this in the tracking file and skip this project.";
+    const DETAIL_COUNT_MESSAGE = (count) => `There are ${count} detail columns. Is it correct? Please recheck the costtab and make sure.`;
+    const COLUMN_PATTERN = /^[A-Za-z]+$/;
+    const OUTPUT_BASE_HEADERS = ["Components", "Sub_components", "detail1", "detail2", "detail3", "detail4"];
+    const PROJECT_LIST = [
+      { id: "2000004944", country: "Djibouti", shortName: "PEJACC" },
+      { id: "2000004864", country: "South Sudan", shortName: "SADEP" },
+      { id: "2000004098", country: "Senegal", shortName: "SFSP" },
+      { id: "2000003953", country: "Uganda", shortName: "ReLIV" },
+      { id: "2000003900", country: "Honduras", shortName: "INNOVASAN" },
+      { id: "2000003897", country: "El Salvador", shortName: "PROGRESAR RURAL" },
+      { id: "2000003444", country: "India", shortName: "CHIRAAG" },
+      { id: "2000002356", country: "Bangladesh", shortName: "RMTP" },
+      { id: "2000002349", country: "Samoa", shortName: "SAFPROM" },
+      { id: "2000002071", country: "Angola", shortName: "SREP" },
+      { id: "2000001816", country: "Central African Republic", shortName: "PREPAS" },
+      { id: "2000001771", country: "Palestine", shortName: "RELAP" },
+      { id: "2000001598", country: "Ethiopia", shortName: "LLRP" },
+      { id: "2000001517", country: "Sudan", shortName: "IAMDP" },
+      { id: "2000001421", country: "India", shortName: "FOCUS" },
+      { id: "2000001420", country: "India", shortName: "APDMP" },
+      { id: "2000001418", country: "Nepal", shortName: "ASDP" },
+      { id: "2000001232", country: "Kyrgyzstan", shortName: "ATMP" },
+      { id: "2000001197", country: "Tonga", shortName: "TRIP II" },
+      { id: "2000001184", country: "China", shortName: "SPRAD-SS" },
+      { id: "2000001181", country: "Indonesia", shortName: "READSI" },
+      { id: "2000001175", country: "Mozambique", shortName: "REFP" },
+      { id: "2000001144", country: "Eritrea", shortName: "FReMP" },
+      { id: "2000001060", country: "Chad", shortName: "RePER" },
+      { id: "2000000897", country: "Peru", shortName: "PDTS" },
+      { id: "2000000738", country: "Burundi", shortName: "PNSADR-IM" },
+      { id: "2000000732", country: "Djibouti", shortName: "PROGRES" },
+      { id: "2000000053", country: "Lesotho", shortName: "WAMPP" },
+      { id: "1100001760", country: "Georgia", shortName: "AMMAR" },
+      { id: "1100001749", country: "Argentina", shortName: "PROCANOR" },
+      { id: "1100001744", country: "Lao People's Democratic Republic", shortName: "NSLCP-RFSP" },
+      { id: "1100001739", country: "Bhutan", shortName: "CARLEP" },
+      { id: "1100001736", country: "El Salvador", shortName: "Rural Adelante" },
+      { id: "1100001727", country: "Morocco", shortName: "PDRZM" },
+      { id: "1100001721", country: "Bolivia (Plurinational State of)", shortName: "PRO-CAMELIDOS" },
+      { id: "1100001716", country: "Solomon Islands", shortName: "RDP II" },
+      { id: "1100001708", country: "Kiribati", shortName: "OIFWP" },
+      { id: "1100001707", country: "Fiji", shortName: "FAPP" },
+      { id: "1100001706", country: "Indonesia", shortName: "IPDMIP" },
+      { id: "1100001704", country: "Tunisia", shortName: "PRODEFIL" },
+      { id: "1100001678", country: "Ghana", shortName: "GASIP" },
+      { id: "1100001669", country: "Republic of Moldova", shortName: "IRECR" },
+      { id: "1100001651", country: "Kenya", shortName: "KCEP-CRAL" },
+      { id: "1100001639", country: "Togo", shortName: "PNPER" },
+      { id: "1100001625", country: "Niger", shortName: "PASADEM" },
+      { id: "1100001623", country: "T\u00fcrkiye", shortName: "MRWRP_Murat" },
+      { id: "1100001619", country: "Brazil", shortName: "Paulo Freire Project" },
+      { id: "1100001614", country: "Senegal", shortName: "PADAER" },
+      { id: "1100001606", country: "Uzbekistan", shortName: "HSP" },
+      { id: "1100001595", country: "Honduras", shortName: "Horizontes del Norte" },
+      { id: "1100001591", country: "Niger", shortName: "EFSRDP" },
+      { id: "1100001589", country: "C\u00f4te d'Ivoire", shortName: "PROPACOM" },
+      { id: "1100001580", country: "Burkina Faso", shortName: "Neer-Tamba Project" },
+      { id: "1100001577", country: "Mauritania", shortName: "PASK II" },
+      { id: "1100001530", country: "Lesotho", shortName: "SADP" },
+      { id: "1100001498", country: "Peru", shortName: "PSSA" },
+      { id: "1100001478", country: "China", shortName: "SPEAR" },
+      { id: "1100001469", country: "Burundi", shortName: "PAIVA-B" },
+      { id: "1100001459", country: "Lao People's Democratic Republic", shortName: "SNRMP" },
+      { id: "1100001454", country: "China", shortName: "DAPRP" },
+      { id: "1100001416", country: "El Salvador", shortName: "PRODEMOR-CENTRAL" },
+      { id: "1100001414", country: "Senegal", shortName: "PAFA" },
+      { id: "1100001400", country: "China", shortName: "IMARRAP" },
+      { id: "1100001348", country: "India", shortName: "PT-Tamil Nadu" },
+      { id: "1100001312", country: "Ghana", shortName: "RTIMP" },
+      { id: "1100001295", country: "Jordan", shortName: "ARMP-II" },
+      { id: "1100001275", country: "Haiti", shortName: "PPI-2" },
+      { id: "1100001255", country: "Mauritania", shortName: "Oasis Sustainable Dev." },
+      { id: "1100001247", country: "Burkina Faso", shortName: "PDRD" },
+      { id: "1100001241", country: "Comoros", shortName: "NPSHD" },
+      { id: "1100001215", country: "El Salvador", shortName: "PREMODER" },
+      { id: "1100001152", country: "Gambia (The)", shortName: "PIWAMP" },
+      { id: "1100001089", country: "Mali", shortName: "SADeF Programme" },
+      { id: "1100001073", country: "Syrian Arab Republic", shortName: "Badia Rangelands" },
+      { id: "1100001054", country: "Sierra Leone", shortName: "Rehabil.&Community" },
+      { id: "1100000482", country: "Syrian Arab Republic", shortName: "Coastal/Midlands Agricult" }
+    ];
+
+    const els = {
+      fileInput: document.getElementById("fileInput"),
+      projectIdInput: document.getElementById("projectIdInput"),
+      projectMatchBox: document.getElementById("projectMatchBox"),
+      summarySelect: document.getElementById("summarySelect"),
+      summaryError: document.getElementById("summaryError"),
+      componentColumnInput: document.getElementById("componentColumnInput"),
+      subcomponentColumnInput: document.getElementById("subcomponentColumnInput"),
+      investmentMeasureSelect: document.getElementById("investmentMeasureSelect"),
+      globalBaseWarning: document.getElementById("globalBaseWarning"),
+      statusBox: document.getElementById("statusBox"),
+      mappingMeta: document.getElementById("mappingMeta"),
+      mappingBody: document.getElementById("mappingBody"),
+      previewSelect: document.getElementById("previewSelect"),
+      previewHead: document.getElementById("previewHead"),
+      previewBody: document.getElementById("previewBody"),
+      checkButton: document.getElementById("checkButton"),
+      generateButton: document.getElementById("generateButton")
+    };
+
+    let state = {
+      workbook: null,
+      fileBuffer: null,
+      fileName: "",
+      sheetNames: [],
+      orderedSourceTabs: [],
+      components: [],
+      projectMatch: null,
+      autoApplied: {
+        currency: false,
+        unit: false
+      },
+      lastValidation: null
+    };
+
+    function initialComponents() {
+      return [{
+        text: "",
+        subcomponents: [newSubcomponent()]
+      }];
+    }
+
+    function newSubcomponent(overrides = {}) {
+      return {
+        text: "",
+        detailStart: "D",
+        detailEnd: "G",
+        totalCol: "",
+        currency: "USD",
+        otherCurrency: "",
+        unit: "",
+        sourceTab: "",
+        ...overrides
+      };
+    }
+
+    function setStatus(type, message) {
+      els.statusBox.className = `status ${type}`;
+      els.statusBox.textContent = message;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalizeCell(value) {
+      if (value === null || value === undefined) {
+        return "";
+      }
+      return String(value).replace(/\s+/g, " ").trim();
+    }
+
+    function normalizeColumn(value) {
+      return normalizeCell(value).toUpperCase();
+    }
+
+    function normalizeProjectId(value) {
+      return normalizeCell(value).replace(/\D/g, "");
+    }
+
+    function getProjectMatch() {
+      const projectId = normalizeProjectId(els.projectIdInput.value);
+      return PROJECT_LIST.find((project) => project.id === projectId) || null;
+    }
+
+    function updateProjectMatch() {
+      state.projectMatch = getProjectMatch();
+      if (state.projectMatch) {
+        els.projectMatchBox.classList.add("show");
+        els.projectMatchBox.textContent = `Country: ${state.projectMatch.country} | Project Short Name: ${state.projectMatch.shortName}`;
+      } else {
+        els.projectMatchBox.classList.remove("show");
+        els.projectMatchBox.textContent = "";
+      }
+      return state.projectMatch;
+    }
+
+    function updateInvestmentMeasureWarning() {
+      els.globalBaseWarning.classList.toggle("show", els.investmentMeasureSelect.value === "Base Cost");
+    }
+
+    function columnToIndex(column) {
+      const value = normalizeColumn(column);
+      if (!COLUMN_PATTERN.test(value)) {
+        return null;
+      }
+      let index = 0;
+      for (const char of value) {
+        index = index * 26 + (char.charCodeAt(0) - 64);
+      }
+      return index - 1;
+    }
+
+    function indexToColumn(index) {
+      let value = "";
+      let number = index + 1;
+      while (number > 0) {
+        const rem = (number - 1) % 26;
+        value = String.fromCharCode(65 + rem) + value;
+        number = Math.floor((number - 1) / 26);
+      }
+      return value;
+    }
+
+    function wordCount(value) {
+      return normalizeCell(value)
+        .replace(/^[A-Za-z0-9]+[.)]\s*/, "")
+        .split(/\s+/)
+        .filter(Boolean).length;
+    }
+
+    function textTokens(value) {
+      return normalizeCell(value).toLowerCase().match(/m&e|[a-z0-9]+/g) || [];
+    }
+
+    function countPhraseMatches(tokens, phraseTokens) {
+      let count = 0;
+      for (let index = 0; index <= tokens.length - phraseTokens.length; index += 1) {
+        const matched = phraseTokens.every((token, phraseIndex) => tokens[index + phraseIndex] === token);
+        if (matched) {
+          count += phraseTokens.length;
+          index += phraseTokens.length - 1;
+        }
+      }
+      return count;
+    }
+
+    function projectManagementWarning(value) {
+      const tokens = textTokens(value);
+      if (tokens.length === 0) {
+        return "";
+      }
+
+      const keywordWordCount =
+        countPhraseMatches(tokens, ["project", "management"]) +
+        countPhraseMatches(tokens, ["knowledge", "management"]) +
+        countPhraseMatches(tokens, ["m&e"]);
+
+      if (keywordWordCount > 0 && keywordWordCount / tokens.length > 0.7) {
+        return "Please consider removing this subcomponent. Keep it only if it includes costs beyond pure project management.";
+      }
+      return "";
+    }
+
+    function isSkipLabel(value) {
+      const text = normalizeCell(value).toLowerCase();
+      if (!text) {
+        return true;
+      }
+      return text === "subtotal" ||
+        text.startsWith("subtotal ") ||
+        text.includes("total project costs") ||
+        text.includes("investment costs") ||
+        text.includes("recurrent costs") ||
+        text === "detailed costs";
+    }
+
+    function isTouchedSubcomponent(sub) {
+      return Boolean(
+        normalizeCell(sub.text) ||
+        normalizeCell(sub.totalCol) ||
+        normalizeCell(sub.currency) !== "USD" ||
+        normalizeCell(sub.otherCurrency) ||
+        normalizeCell(sub.unit) ||
+        normalizeCell(sub.sourceTab)
+      );
+    }
+
+    function activeComponents() {
+      return state.components
+        .map((component, componentIndex) => ({
+          component,
+          componentIndex,
+          subcomponents: component.subcomponents
+            .map((subcomponent, subIndex) => ({ subcomponent, subIndex }))
+            .filter(({ subcomponent }) => normalizeCell(subcomponent.text) || isTouchedSubcomponent(subcomponent))
+        }))
+        .filter(({ component, subcomponents }) => normalizeCell(component.text) || subcomponents.length > 0);
+    }
+
+    function sortSourceTabs(sheetNames) {
+      const dtTabs = [];
+      const otherTabs = [];
+
+      sheetNames.forEach((name, originalIndex) => {
+        const match = /^DT_(\d+)(?:_(\d+))?/i.exec(name);
+        if (match) {
+          dtTabs.push({
+            name,
+            originalIndex,
+            major: Number.parseInt(match[1], 10),
+            minor: Number.parseInt(match[2] || "0", 10)
+          });
+        } else {
+          otherTabs.push({ name, originalIndex });
+        }
+      });
+
+      dtTabs.sort((a, b) => a.major - b.major || a.minor - b.minor || a.originalIndex - b.originalIndex);
+      return [...dtTabs.map((item) => item.name), ...otherTabs.map((item) => item.name)];
+    }
+
+    function findSummaryTabs(sheetNames) {
+      return sheetNames.filter((name) => name.toUpperCase().includes("COM"));
+    }
+
+    function preferredSummaryTab(summaryTabs) {
+      return summaryTabs.find((name) => name.toUpperCase() === "COMFIN") ||
+        summaryTabs.find((name) => name.toUpperCase().includes("COMFIN")) ||
+        summaryTabs[0] ||
+        "";
+    }
+
+    function renderOptions(select, options, selectedValue, blankLabel = "") {
+      const rows = [];
+      if (blankLabel !== null) {
+        rows.push(`<option value="">${escapeHtml(blankLabel)}</option>`);
+      }
+      options.forEach((option) => {
+        const value = typeof option === "string" ? option : option.value;
+        const label = typeof option === "string" ? option : option.label;
+        const selected = value === selectedValue ? " selected" : "";
+        rows.push(`<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`);
+      });
+      select.innerHTML = rows.join("");
+    }
+
+    function renderSummarySelect() {
+      const tabs = findSummaryTabs(state.sheetNames);
+      const preferred = preferredSummaryTab(tabs);
+      els.summarySelect.disabled = tabs.length === 0;
+      renderOptions(els.summarySelect, tabs, preferred, tabs.length ? null : "");
+      els.summaryError.classList.toggle("show", tabs.length === 0 && state.workbook !== null);
+    }
+
+    function renderPreviewSelect() {
+      els.previewSelect.disabled = state.orderedSourceTabs.length === 0;
+      renderOptions(els.previewSelect, state.orderedSourceTabs, els.previewSelect.value || state.orderedSourceTabs[0] || "", "Select a source tab");
+      if (state.orderedSourceTabs.length > 0 && !els.previewSelect.value) {
+        els.previewSelect.value = state.orderedSourceTabs[0];
+      }
+      renderPreview();
+    }
+
+    function optionHtml(options, selected, blankLabel) {
+      const rows = [`<option value="">${escapeHtml(blankLabel)}</option>`];
+      options.forEach((option) => {
+        const value = typeof option === "string" ? option : option.value;
+        const label = typeof option === "string" ? option : option.label;
+        rows.push(`<option value="${escapeHtml(value)}"${value === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
+      });
+      return rows.join("");
+    }
+
+    function renderMappingTable() {
+      const rows = [];
+      const sourceOptions = optionHtml(state.orderedSourceTabs, "", "Select tab");
+      const unitOptions = optionHtml([
+        { value: "million", label: "million" },
+        { value: "thousand", label: "thousand ('000)" },
+        { value: "unit", label: "unit (1)" }
+      ], "", "Select unit");
+
+      state.components.forEach((component, componentIndex) => {
+        component.subcomponents.forEach((sub, subIndex) => {
+          const rowId = `${componentIndex}-${subIndex}`;
+          const showComponent = subIndex === 0;
+          const sourceSelect = sourceOptions.replace(`value="${escapeHtml(sub.sourceTab)}"`, `value="${escapeHtml(sub.sourceTab)}" selected`);
+          const unitSelect = unitOptions.replace(`value="${escapeHtml(sub.unit)}"`, `value="${escapeHtml(sub.unit)}" selected`);
+          rows.push(`
+            <tr data-component-index="${componentIndex}" data-sub-index="${subIndex}">
+              <td class="action-cell">
+                <button class="row-action-button" type="button" title="Insert a blank row below" data-action="insert-row" data-component-index="${componentIndex}" data-sub-index="${subIndex}">+</button>
+                <button class="row-action-button delete-row-button" type="button" title="Delete this row" data-action="delete-row" data-component-index="${componentIndex}" data-sub-index="${subIndex}">-</button>
+              </td>
+              <td class="component-cell">
+                ${showComponent ? `
+                  <div class="component-input">
+                    <span class="number-tag">${componentIndex + 1}.</span>
+                    <div>
+                      <input id="component-${componentIndex}" data-kind="component-text" data-component-index="${componentIndex}" value="${escapeHtml(component.text)}">
+                      <div class="error-text" data-error-for="component-${componentIndex}"></div>
+                    </div>
+                  </div>
+                ` : ""}
+              </td>
+              <td class="subcomponent-cell">
+                <div class="subcomponent-input">
+                  <span class="number-tag">${subIndex + 1}.</span>
+                  <div>
+                    <input id="subcomponent-${rowId}" data-kind="sub-text" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.text)}">
+                    <div class="error-text" data-error-for="subcomponent-${rowId}"></div>
+                    <div class="pm-warning" data-pm-warning-for="subcomponent-${rowId}">${escapeHtml(projectManagementWarning(sub.text))}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="letter-cell">
+                <input id="detail-start-${rowId}" data-kind="detail-start" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.detailStart)}">
+                <div class="error-text" data-error-for="detail-start-${rowId}"></div>
+              </td>
+              <td class="letter-cell">
+                <input id="detail-end-${rowId}" data-kind="detail-end" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.detailEnd)}">
+                <div class="error-text" data-error-for="detail-end-${rowId}"></div>
+                <div class="warning-text" data-warning-for="detail-end-${rowId}"></div>
+              </td>
+              <td class="money-cell">
+                <input id="total-col-${rowId}" data-kind="total-col" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.totalCol)}">
+                <div class="error-text" data-error-for="total-col-${rowId}"></div>
+              </td>
+              <td class="money-cell">
+                <select id="currency-${rowId}" data-kind="currency" data-component-index="${componentIndex}" data-sub-index="${subIndex}">
+                  <option value="USD"${sub.currency === "USD" ? " selected" : ""}>USD</option>
+                  <option value="Other"${sub.currency === "Other" ? " selected" : ""}>Other</option>
+                </select>
+                <input id="other-currency-${rowId}" data-kind="other-currency" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.otherCurrency)}" placeholder="Currency" style="${sub.currency === "Other" ? "margin-top:6px" : "display:none;margin-top:6px"}">
+                <div class="error-text" data-error-for="currency-${rowId}"></div>
+                <div class="error-text" data-error-for="other-currency-${rowId}"></div>
+              </td>
+              <td class="money-cell">
+                <select id="unit-${rowId}" data-kind="unit" data-component-index="${componentIndex}" data-sub-index="${subIndex}">
+                  ${unitSelect}
+                </select>
+                <div class="error-text" data-error-for="unit-${rowId}"></div>
+              </td>
+              <td class="source-cell">
+                <select id="source-tab-${rowId}" data-kind="source-tab" data-component-index="${componentIndex}" data-sub-index="${subIndex}">
+                  ${sourceSelect}
+                </select>
+                <div class="error-text" data-error-for="source-tab-${rowId}"></div>
+              </td>
+            </tr>
+          `);
+        });
+      });
+
+      els.mappingBody.innerHTML = rows.join("");
+      els.mappingMeta.textContent = state.workbook
+        ? `${state.fileName}: ${state.sheetNames.length} sheets loaded.`
+        : "No workbook loaded.";
+    }
+
+    function syncFromDom() {
+      els.mappingBody.querySelectorAll("[data-kind]").forEach((element) => {
+        const kind = element.dataset.kind;
+        const componentIndex = Number.parseInt(element.dataset.componentIndex, 10);
+        const subIndex = Number.parseInt(element.dataset.subIndex, 10);
+        const component = state.components[componentIndex];
+        const sub = component?.subcomponents[subIndex];
+
+        if (kind === "component-text" && component) {
+          component.text = element.value;
+        } else if (kind === "sub-text" && sub) {
+          sub.text = element.value;
+        } else if (kind === "detail-start" && sub) {
+          sub.detailStart = element.value;
+        } else if (kind === "detail-end" && sub) {
+          sub.detailEnd = element.value;
+        } else if (kind === "total-col" && sub) {
+          sub.totalCol = element.value;
+        } else if (kind === "currency" && sub) {
+          sub.currency = element.value;
+        } else if (kind === "other-currency" && sub) {
+          sub.otherCurrency = element.value;
+        } else if (kind === "unit" && sub) {
+          sub.unit = element.value;
+        } else if (kind === "source-tab" && sub) {
+          sub.sourceTab = element.value;
+        }
+      });
+    }
+
+    function insertBlankRowAfter(componentIndex, subIndex) {
+      const component = state.components[componentIndex];
+      if (!component) {
+        return;
+      }
+      component.subcomponents.splice(subIndex + 1, 0, newSubcomponent());
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+      renderMappingTable();
+    }
+
+    function deleteMappingRow(componentIndex, subIndex) {
+      const component = state.components[componentIndex];
+      if (!component || !component.subcomponents[subIndex]) {
+        return;
+      }
+
+      if (component.subcomponents.length > 1) {
+        component.subcomponents.splice(subIndex, 1);
+      } else {
+        state.components.splice(componentIndex, 1);
+      }
+
+      if (state.components.length === 0) {
+        state.components = initialComponents();
+      }
+
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+      renderMappingTable();
+    }
+
+    function clearValidationMarks() {
+      document.querySelectorAll(".invalid").forEach((element) => element.classList.remove("invalid"));
+      document.querySelectorAll(".error-text").forEach((element) => { element.textContent = ""; });
+      document.querySelectorAll(".warning-text").forEach((element) => { element.textContent = ""; });
+    }
+
+    function setFieldError(id, message) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.classList.add("invalid");
+      }
+      const messageElement = document.querySelector(`[data-error-for="${CSS.escape(id)}"]`);
+      if (messageElement) {
+        messageElement.textContent = message;
+      }
+    }
+
+    function setFieldWarning(id, message) {
+      const messageElement = document.querySelector(`[data-warning-for="${CSS.escape(id)}"]`);
+      if (messageElement) {
+        messageElement.textContent = message;
+      }
+    }
+
+    function applyFirstRowValueOnce(kind) {
+      const keyByKind = {
+        "currency": "currency",
+        "unit": "unit"
+      };
+      const autoKeyByKind = {
+        "currency": "currency",
+        "unit": "unit"
+      };
+      const key = keyByKind[kind];
+      const autoKey = autoKeyByKind[kind];
+      const source = state.components[0]?.subcomponents[0];
+      if (!key || !autoKey || !source || state.autoApplied[autoKey] || !normalizeCell(source[key])) {
+        return false;
+      }
+
+      state.components.forEach((component) => {
+        component.subcomponents.forEach((sub, subIndex) => {
+          if (component === state.components[0] && subIndex === 0) {
+            return;
+          }
+          sub[key] = source[key];
+          if (key === "currency" && source.currency === "Other") {
+            sub.otherCurrency = source.otherCurrency;
+          }
+        });
+      });
+      state.autoApplied[autoKey] = true;
+      return true;
+    }
+
+    function worksheetToRows(sheetName) {
+      if (!state.workbook || !sheetName || !state.workbook.Sheets[sheetName]) {
+        return [];
+      }
+      return XLSX.utils.sheet_to_json(state.workbook.Sheets[sheetName], { header: 1, defval: "" });
+    }
+
+    function renderPreview() {
+      const sheetName = els.previewSelect.value;
+      const rows = worksheetToRows(sheetName).slice(0, 20);
+
+      if (!sheetName || rows.length === 0) {
+        els.previewHead.innerHTML = "";
+        els.previewBody.innerHTML = "<tr><td>No source tab selected.</td></tr>";
+        return;
+      }
+
+      const maxCols = Math.min(12, Math.max(...rows.map((row) => row.length), 1));
+      els.previewHead.innerHTML = `<tr>${Array.from({ length: maxCols }, (_, index) => `<th>${indexToColumn(index)}</th>`).join("")}</tr>`;
+      els.previewBody.innerHTML = rows.map((row) => `
+        <tr>${Array.from({ length: maxCols }, (_, index) => `<td>${escapeHtml(row[index])}</td>`).join("")}</tr>
+      `).join("");
+    }
+
+    function readColumnValues(sheetName, columnLetter) {
+      const columnIndex = columnToIndex(columnLetter);
+      if (columnIndex === null) {
+        return [];
+      }
+      return worksheetToRows(sheetName).map((row, rowIndex) => ({
+        rowIndex,
+        value: normalizeCell(row[columnIndex])
+      }));
+    }
+
+    function populateComponentsFromSummary() {
+      const summaryTab = els.summarySelect.value;
+      const componentColumn = normalizeColumn(els.componentColumnInput.value);
+      const subcomponentColumn = normalizeColumn(els.subcomponentColumnInput.value);
+      const componentIndex = columnToIndex(componentColumn);
+      const subcomponentIndex = columnToIndex(subcomponentColumn);
+
+      if (!summaryTab || componentIndex === null) {
+        return;
+      }
+
+      const rows = worksheetToRows(summaryTab);
+      const componentEntries = [];
+      const componentByText = new Map();
+      let currentComponent = "";
+
+      rows.forEach((row) => {
+        const componentText = normalizeCell(row[componentIndex]);
+        const subcomponentText = subcomponentIndex === null ? "" : normalizeCell(row[subcomponentIndex]);
+
+        if (componentText && !isSkipLabel(componentText)) {
+          currentComponent = stripLeadingMarker(componentText);
+          if (!componentByText.has(currentComponent)) {
+            const entry = { text: currentComponent, subcomponents: [] };
+            componentByText.set(currentComponent, entry);
+            componentEntries.push(entry);
+          }
+        }
+
+        if (subcomponentIndex !== null && subcomponentText && !isSkipLabel(subcomponentText) && currentComponent) {
+          const entry = componentByText.get(currentComponent);
+          const cleanSubcomponentText = stripLeadingMarker(subcomponentText);
+          if (entry && cleanSubcomponentText && !entry.subcomponents.some((item) => item.text === cleanSubcomponentText)) {
+            entry.subcomponents.push(newSubcomponent({ text: cleanSubcomponentText }));
+          }
+        }
+      });
+
+      if (componentEntries.length === 0) {
+        return;
+      }
+
+      const dtTabs = state.orderedSourceTabs.filter((name) => /^DT_/i.test(name));
+      let dtIndex = 0;
+      componentEntries.forEach((component) => {
+        if (component.subcomponents.length === 0) {
+          component.subcomponents.push(newSubcomponent());
+        }
+        component.subcomponents.forEach((sub) => {
+          if (!sub.sourceTab && dtTabs[dtIndex]) {
+            sub.sourceTab = dtTabs[dtIndex];
+            dtIndex += 1;
+          }
+        });
+      });
+
+      state.components = componentEntries;
+      renderMappingTable();
+      setStatus("info", `Loaded default component and subcomponent text from ${summaryTab}.`);
+    }
+
+    function amountHeader(sub) {
+      const measure = els.investmentMeasureSelect.value || "Totals Including Contingencies";
+      const currency = sub.currency === "Other" ? normalizeCell(sub.otherCurrency) : sub.currency;
+      if (sub.unit === "thousand") {
+        return `${measure} (${currency} '000)`;
+      }
+      if (sub.unit === "million") {
+        return `${measure} (${currency} million)`;
+      }
+      return `${measure} (${currency})`;
+    }
+
+    function amountFactor(unit) {
+      if (unit === "million") {
+        return 1000000;
+      }
+      if (unit === "thousand") {
+        return 1000;
+      }
+      return 1;
+    }
+
+    function parseAmount(value) {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+      }
+      const text = normalizeCell(value).replace(/,/g, "");
+      if (!text) {
+        return null;
+      }
+      const number = Number.parseFloat(text);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function normalizeDetailCell(value) {
+      if (typeof value === "number" && value === 0) {
+        return "";
+      }
+      const text = normalizeCell(value);
+      return /^0(?:\.0+)?$/.test(text) ? "" : text;
+    }
+
+    function clonePlainObject(value) {
+      return value ? JSON.parse(JSON.stringify(value)) : {};
+    }
+
+    function stripLeadingMarker(value) {
+      return normalizeCell(value).replace(/^(?:[A-Za-z]|\d+)[.)]\s*/, "");
+    }
+
+    function numberedText(number, value) {
+      const text = stripLeadingMarker(value);
+      return text ? `${number}. ${text}` : "";
+    }
+
+    function hasUnitLikeCell(row, detailEndIndex) {
+      const unitValue = normalizeCell(row[detailEndIndex + 1]);
+      if (!unitValue) {
+        return false;
+      }
+      const lowered = unitValue.toLowerCase();
+      return lowered !== "unit" && lowered !== " ";
+    }
+
+    function isHeaderRow(row, detailIndices) {
+      const joined = detailIndices.map((index) => normalizeDetailCell(row[index])).filter(Boolean).join(" ").toLowerCase();
+      if (!joined) {
+        return true;
+      }
+      return joined.includes("detailed costs") ||
+        joined.includes("quantities") ||
+        joined.includes("unit cost") ||
+        joined.includes("financing");
+    }
+
+    function collectRowsForMapping(item, issues = null) {
+      const rows = worksheetToRows(item.subcomponent.sourceTab);
+      const startIndex = columnToIndex(item.subcomponent.detailStart);
+      const endIndex = columnToIndex(item.subcomponent.detailEnd);
+      const amountIndex = columnToIndex(item.subcomponent.totalCol);
+      const detailIndices = [];
+      const issuePrefix = item.issuePrefix || "Mapping row";
+      const issueCounts = {
+        detailStart: 0,
+        investment: 0
+      };
+
+      for (let index = startIndex; index <= endIndex; index += 1) {
+        detailIndices.push(index);
+      }
+
+      const output = [];
+      rows.forEach((row, rowIndex) => {
+        if (rowIndex < 5) {
+          return;
+        }
+        if (isHeaderRow(row, detailIndices)) {
+          return;
+        }
+
+        const detailValues = detailIndices.slice(0, 4).map((index) => normalizeDetailCell(row[index]));
+        while (detailValues.length < 4) {
+          detailValues.push("");
+        }
+
+        const compact = detailValues.filter(Boolean);
+        if (compact.length === 0 || compact.some(isSkipLabel)) {
+          return;
+        }
+
+        if (!detailValues[0]) {
+          if (issues) {
+            issueCounts.detailStart += 1;
+          }
+          return;
+        }
+
+        if (!hasUnitLikeCell(row, endIndex)) {
+          const deepest = detailValues.reduce((last, value, index) => value ? index : last, -1);
+          const hasLowerLevelDetail = deepest >= 1;
+          if (!hasLowerLevelDetail) {
+            return;
+          }
+          const nextRows = rows.slice(rowIndex + 1, rowIndex + 4);
+          const sameFirstDetailFollows = nextRows.some((nextRow) => normalizeDetailCell(nextRow[detailIndices[0]]) === detailValues[0]);
+          if (sameFirstDetailFollows) {
+            return;
+          }
+        }
+
+        const rawAmount = amountIndex === null ? null : parseAmount(row[amountIndex]);
+        if (rawAmount === null || rawAmount === 0) {
+          if (issues) {
+            issueCounts.investment += 1;
+          }
+          return;
+        }
+
+        output.push({
+          component: numberedText(item.componentIndex + 1, item.component.text),
+          subcomponent: numberedText(item.subIndex + 1, item.subcomponent.text),
+          details: detailValues,
+          amount: rawAmount,
+          totalInvt: rawAmount === null ? null : rawAmount * amountFactor(item.subcomponent.unit),
+          currency: item.subcomponent.currency === "Other" ? normalizeCell(item.subcomponent.otherCurrency) : item.subcomponent.currency
+        });
+      });
+      if (issues && issueCounts.detailStart > 0) {
+        issues.push({
+          message: `${issuePrefix}: detail start is empty in ${issueCounts.detailStart} rows in ${item.subcomponent.sourceTab}. Please recheck.`,
+          fieldId: item.fieldIds?.detailStart
+        });
+      }
+      if (issues && issueCounts.investment > 0) {
+        issues.push({
+          message: `${issuePrefix}: investment column is empty or 0 in ${issueCounts.investment} rows in ${item.subcomponent.sourceTab}. Please recheck.`,
+          fieldId: item.fieldIds?.totalCol
+        });
+      }
+      return output;
+    }
+
+    async function appendSummarySheet(outputWorkbook) {
+      if (typeof ExcelJS !== "undefined" && state.fileBuffer) {
+        try {
+          const inputWorkbook = new ExcelJS.Workbook();
+          await inputWorkbook.xlsx.load(state.fileBuffer.slice(0));
+          const sourceSheet = inputWorkbook.getWorksheet(els.summarySelect.value);
+          if (sourceSheet) {
+            const targetSheet = outputWorkbook.addWorksheet("COMFIN");
+            sourceSheet.columns.forEach((column, index) => {
+              if (column.width) {
+                targetSheet.getColumn(index + 1).width = column.width;
+              }
+            });
+            sourceSheet.eachRow({ includeEmpty: true }, (sourceRow, rowNumber) => {
+              const targetRow = targetSheet.getRow(rowNumber);
+              targetRow.height = sourceRow.height;
+              sourceRow.eachCell({ includeEmpty: true }, (sourceCell, colNumber) => {
+                const targetCell = targetRow.getCell(colNumber);
+                targetCell.value = sourceCell.value;
+                targetCell.style = clonePlainObject(sourceCell.style);
+                targetCell.numFmt = sourceCell.numFmt;
+              });
+            });
+            Object.keys(sourceSheet._merges || {}).forEach((range) => {
+              targetSheet.mergeCells(range);
+            });
+            return;
+          }
+        } catch (error) {
+          console.warn("Falling back to value-only COMFIN copy.", error);
+        }
+      }
+
+      const summarySheet = outputWorkbook.addWorksheet("COMFIN");
+      worksheetToRows(els.summarySelect.value).forEach((row) => {
+        summarySheet.addRow(row);
+      });
+    }
+
+    function validate() {
+      syncFromDom();
+      clearValidationMarks();
+      const errors = [];
+      const warnings = [];
+
+      if (!state.workbook) {
+        errors.push("Select a raw costtab file.");
+      }
+
+      const projectId = normalizeProjectId(els.projectIdInput.value);
+      const projectMatch = updateProjectMatch();
+      if (!projectId) {
+        setFieldError("projectIdInput", "Project ID is required.");
+        errors.push("Project ID is required.");
+      } else if (!projectMatch) {
+        setFieldError("projectIdInput", "Project ID is not in the embedded costtab pre-process project list.");
+        errors.push("Project ID is not in the embedded costtab pre-process project list.");
+      }
+
+      if (!els.summarySelect.value) {
+        setFieldError("summarySelect", NO_SUMMARY_MESSAGE);
+        errors.push(NO_SUMMARY_MESSAGE);
+      }
+
+      [
+        ["componentColumnInput", "Component column must be one or more letters."],
+        ["subcomponentColumnInput", "Subcomponent column must be one or more letters."]
+      ].forEach(([id, message]) => {
+        const value = normalizeCell(els[id].value);
+        if (!value || !COLUMN_PATTERN.test(value)) {
+          setFieldError(id, message);
+          errors.push(message);
+        }
+      });
+
+      const active = activeComponents();
+      if (active.length === 0) {
+        errors.push("At least one component and subcomponent mapping is required.");
+      }
+
+      active.forEach(({ component, componentIndex, subcomponents }) => {
+        if (!normalizeCell(component.text)) {
+          setFieldError(`component-${componentIndex}`, "Component text is required.");
+          errors.push(`Component ${componentIndex + 1}: component text is required.`);
+        } else if (wordCount(component.text) < 2) {
+          setFieldError(`component-${componentIndex}`, "Component text must contain at least 2 words.");
+          errors.push(`Component ${componentIndex + 1}: component text must contain at least 2 words.`);
+        }
+
+        if (subcomponents.length === 0) {
+          errors.push(`Component ${componentIndex + 1}: at least one subcomponent is required.`);
+        }
+
+        subcomponents.forEach(({ subcomponent, subIndex }) => {
+          const rowId = `${componentIndex}-${subIndex}`;
+          const prefix = `Component ${componentIndex + 1}, subcomponent ${subIndex + 1}`;
+
+          if (!normalizeCell(subcomponent.text)) {
+            setFieldError(`subcomponent-${rowId}`, "Subcomponent text is required.");
+            errors.push(`${prefix}: subcomponent text is required.`);
+          } else if (wordCount(subcomponent.text) < 2) {
+            setFieldError(`subcomponent-${rowId}`, "Subcomponent text must contain at least 2 words.");
+            errors.push(`${prefix}: subcomponent text must contain at least 2 words.`);
+          }
+
+          [
+            [`detail-start-${rowId}`, subcomponent.detailStart, "Detail start column must be letters."],
+            [`detail-end-${rowId}`, subcomponent.detailEnd, "Detail end column must be letters."],
+            [`total-col-${rowId}`, subcomponent.totalCol, "Investment column must be letters."]
+          ].forEach(([id, value, message]) => {
+            if (!normalizeCell(value) || !COLUMN_PATTERN.test(normalizeCell(value))) {
+              setFieldError(id, message);
+              errors.push(`${prefix}: ${message}`);
+            }
+          });
+
+          const startIndex = columnToIndex(subcomponent.detailStart);
+          const endIndex = columnToIndex(subcomponent.detailEnd);
+          if (startIndex !== null && endIndex !== null) {
+            if (endIndex < startIndex) {
+              setFieldError(`detail-end-${rowId}`, "Detail end must not be before detail start.");
+              errors.push(`${prefix}: detail end must not be before detail start.`);
+            } else {
+              const count = endIndex - startIndex + 1;
+              if (count !== 4) {
+                const message = DETAIL_COUNT_MESSAGE(count);
+                setFieldWarning(`detail-end-${rowId}`, message);
+                warnings.push(`${prefix}: ${message}`);
+              }
+            }
+          }
+
+          if (subcomponent.currency === "Other" && !normalizeCell(subcomponent.otherCurrency)) {
+            setFieldError(`other-currency-${rowId}`, "Currency is required when Other is selected.");
+            errors.push(`${prefix}: currency is required when Other is selected.`);
+          }
+
+          if (!normalizeCell(subcomponent.unit)) {
+            setFieldError(`unit-${rowId}`, "Unit is required.");
+            errors.push(`${prefix}: unit is required.`);
+          }
+
+          if (!normalizeCell(subcomponent.sourceTab)) {
+            setFieldError(`source-tab-${rowId}`, "Source tab is required.");
+            errors.push(`${prefix}: source tab is required.`);
+          }
+
+          if (
+            normalizeCell(subcomponent.sourceTab) &&
+            state.workbook?.Sheets[subcomponent.sourceTab] &&
+            startIndex !== null &&
+            endIndex !== null &&
+            endIndex >= startIndex &&
+            columnToIndex(subcomponent.totalCol) !== null
+          ) {
+            const sourceIssues = [];
+            collectRowsForMapping({
+              component,
+              componentIndex,
+              subcomponent,
+              subIndex,
+              issuePrefix: prefix,
+              fieldIds: {
+                detailStart: `detail-start-${rowId}`,
+                totalCol: `total-col-${rowId}`
+              }
+            }, sourceIssues);
+            sourceIssues.forEach((issue) => {
+              if (issue.fieldId) {
+                setFieldError(issue.fieldId, "Please recheck.");
+              }
+              errors.push(issue.message);
+            });
+          }
+        });
+      });
+
+      state.lastValidation = { ok: errors.length === 0, warnings, errors };
+      els.generateButton.disabled = errors.length > 0;
+
+      if (errors.length > 0) {
+        setStatus("error", errors.slice(0, 8).join("\n") + (errors.length > 8 ? `\n...and ${errors.length - 8} more errors.` : ""));
+      } else if (warnings.length > 0) {
+        setStatus("warning", warnings.join("\n"));
+      } else {
+        setStatus("success", "All checks passed. Ready to generate.");
+      }
+
+      return state.lastValidation;
+    }
+
+    async function generateWorkbook() {
+      const validation = validate();
+      if (!validation.ok) {
+        return;
+      }
+
+      if (typeof ExcelJS === "undefined") {
+        setStatus("error", "ExcelJS did not load. The styled .xlsx generator depends on the ExcelJS CDN.");
+        return;
+      }
+
+      const active = activeComponents();
+      const firstSub = active[0]?.subcomponents[0]?.subcomponent;
+      const investmentHeader = amountHeader(firstSub);
+      const outputHeaders = [...OUTPUT_BASE_HEADERS, investmentHeader, "total_invt", "currency", "cost_line"];
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "costtab pre-processer";
+      workbook.created = new Date();
+
+      const sheet = workbook.addWorksheet("Sheet1");
+      sheet.addRow(outputHeaders);
+      sheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.border = { bottom: { style: "thin" } };
+      });
+
+      let costLine = 1;
+      active.forEach((componentItem) => {
+        componentItem.subcomponents.forEach((subItem) => {
+          collectRowsForMapping({
+            component: componentItem.component,
+            componentIndex: componentItem.componentIndex,
+            subcomponent: subItem.subcomponent,
+            subIndex: subItem.subIndex
+          }).forEach((row) => {
+            sheet.addRow([
+              row.component,
+              row.subcomponent,
+              row.details[0],
+              row.details[1],
+              row.details[2],
+              row.details[3],
+              row.amount,
+              row.totalInvt,
+              row.currency,
+              costLine
+            ]);
+            costLine += 1;
+          });
+        });
+      });
+
+      sheet.columns = [
+        { width: 42 },
+        { width: 42 },
+        { width: 52 },
+        { width: 52 },
+        { width: 42 },
+        { width: 28 },
+        { width: 28 },
+        { width: 16 },
+        { width: 12 },
+        { width: 12 }
+      ];
+
+      await appendSummarySheet(workbook);
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      const link = document.createElement("a");
+      const project = state.projectMatch || updateProjectMatch() || { country: "country", shortName: "project" };
+      const shortName = project.shortName;
+      const country = project.country;
+      link.href = URL.createObjectURL(blob);
+      link.download = `${country} ${shortName}_formatted_costtab.xlsx`.replace(/[\\/:*?"<>|]+/g, "_");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+
+      setStatus("success", `Generated ${costLine - 1} cost lines. Sheet1 and COMFIN were written.`);
+    }
+
+    async function readWorkbook(file) {
+      const buffer = await file.arrayBuffer();
+      return {
+        workbook: XLSX.read(buffer, { type: "array", cellDates: true }),
+        buffer
+      };
+    }
+
+    async function handleFileChange() {
+      const file = els.fileInput.files[0];
+      state.workbook = null;
+      state.fileBuffer = null;
+      state.fileName = "";
+      state.sheetNames = [];
+      state.orderedSourceTabs = [];
+      state.components = initialComponents();
+      state.autoApplied = {
+        currency: false,
+        unit: false
+      };
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+
+      if (!file) {
+        renderMappingTable();
+        setStatus("info", "Waiting for a raw costtab file.");
+        return;
+      }
+
+      if (typeof XLSX === "undefined") {
+        setStatus("error", "The Excel parsing library did not load. This tool depends on the SheetJS CDN.");
+        return;
+      }
+
+      setStatus("info", "Reading workbook.");
+      try {
+        const loaded = await readWorkbook(file);
+        state.workbook = loaded.workbook;
+        state.fileBuffer = loaded.buffer;
+        state.fileName = file.name;
+        state.sheetNames = state.workbook.SheetNames.slice();
+        state.orderedSourceTabs = sortSourceTabs(state.sheetNames);
+        renderSummarySelect();
+        renderPreviewSelect();
+        renderMappingTable();
+        setStatus("info", `${file.name} loaded. Enter component/subcomponent columns, then check.`);
+      } catch (error) {
+        setStatus("error", error.message || String(error));
+      }
+    }
+
+    els.fileInput.addEventListener("change", handleFileChange);
+    els.summarySelect.addEventListener("change", () => {
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+      if (els.componentColumnInput.value && els.subcomponentColumnInput.value) {
+        populateComponentsFromSummary();
+      }
+    });
+    els.componentColumnInput.addEventListener("change", populateComponentsFromSummary);
+    els.subcomponentColumnInput.addEventListener("change", populateComponentsFromSummary);
+    els.projectIdInput.addEventListener("input", () => {
+      updateProjectMatch();
+      els.projectIdInput.classList.remove("invalid");
+      const messageElement = document.querySelector('[data-error-for="projectIdInput"]');
+      if (messageElement) {
+        messageElement.textContent = "";
+      }
+      if (normalizeProjectId(els.projectIdInput.value) && !state.projectMatch) {
+        setFieldError("projectIdInput", "Project ID is not in the embedded costtab pre-process project list.");
+      }
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+    });
+    els.investmentMeasureSelect.addEventListener("change", () => {
+      updateInvestmentMeasureWarning();
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+    });
+    els.previewSelect.addEventListener("change", renderPreview);
+    els.checkButton.addEventListener("click", validate);
+    els.generateButton.addEventListener("click", generateWorkbook);
+
+    els.mappingBody.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-action='insert-row']");
+      if (!button) {
+        const deleteButton = event.target.closest("[data-action='delete-row']");
+        if (!deleteButton) {
+          return;
+        }
+        syncFromDom();
+        deleteMappingRow(Number.parseInt(deleteButton.dataset.componentIndex, 10), Number.parseInt(deleteButton.dataset.subIndex, 10));
+        return;
+      }
+      syncFromDom();
+      insertBlankRowAfter(Number.parseInt(button.dataset.componentIndex, 10), Number.parseInt(button.dataset.subIndex, 10));
+    });
+
+    els.mappingBody.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!target.dataset.kind) {
+        return;
+      }
+      syncFromDom();
+      if (target.dataset.kind === "sub-text") {
+        const warningElement = document.querySelector(`[data-pm-warning-for="${CSS.escape(target.id)}"]`);
+        if (warningElement) {
+          warningElement.textContent = projectManagementWarning(target.value);
+        }
+      }
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+    });
+
+    els.mappingBody.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!target.dataset.kind) {
+        return;
+      }
+      syncFromDom();
+      const componentIndex = Number.parseInt(target.dataset.componentIndex, 10);
+      const subIndex = Number.parseInt(target.dataset.subIndex, 10);
+      const autoApplied = componentIndex === 0 && subIndex === 0
+        ? applyFirstRowValueOnce(target.dataset.kind)
+        : false;
+      state.lastValidation = null;
+      els.generateButton.disabled = true;
+      if (autoApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
+        renderMappingTable();
+      }
+    });
+
+    state.components = initialComponents();
+    renderSummarySelect();
+    renderPreviewSelect();
+    renderMappingTable();
+    updateInvestmentMeasureWarning();
+  </script>
+</body>
+</html>
