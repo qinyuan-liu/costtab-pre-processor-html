@@ -33,6 +33,7 @@ Blocking errors:
 - Project ID is normalized to digits only and must be present in the embedded project list.
 - A component financing summary tab must be selected. Summary tab candidates are workbook sheets whose names include `COM`; `COMFIN` is preferred when present. If no summary tab exists, the tool shows: `No component financing summary found. Please flag this in the tracking file and skip this project.`
 - Component and subcomponent summary columns must be non-empty Excel column letters only, for example `A`, `D`, or `AA`.
+- In component mode, the top-level subcomponent column input is hidden and subcomponent text is not checked. The former subcomponent level in the DT sheet should be treated as the detail start level.
 - At least one active component/subcomponent mapping is required. A mapping is active when the component has text, or when a subcomponent has text, an investment column, a non-USD currency, a custom currency, a unit, or a source tab. Editing only detail start/end does not make an otherwise empty row active.
 - Component text is required for every active component and must contain at least 2 words. A leading marker such as `1.` or `A)` is ignored for the word count.
 - Each active component must have at least one active subcomponent.
@@ -54,8 +55,13 @@ Non-blocking warnings:
 Source row scanning details:
 
 - Source rows before row 6 are skipped.
+- A summary tab is optional. If no `COM` tab is available, component/subcomponent text can be filled from source tabs by entering source column letters in the mapping table.
+- Component and subcomponent mapping columns override text loaded from the summary tab when provided.
 - Header rows are skipped when the selected detail columns are empty or include `detailed costs`, `quantities`, `unit cost`, or `financing`.
 - Rows are skipped when all selected detail cells are empty.
 - Rows are skipped when any selected detail cell is a skip label: blank, `subtotal`, text beginning with `subtotal `, text containing `total project costs`, text containing `investment costs`, text containing `recurrent costs`, or exactly `detailed costs`.
+- When the first selected detail cell is blank but lower-level detail cells are present, the first detail value is filled down from the previous valid detail start before the row is checked.
+- Language-sensitive labels are centralized in `LANGUAGE_LABELS` in `costtab_pre_processor.html`; French and Spanish dictionaries are scaffolded but empty.
+- In component mode, DT source tabs are assigned by component (`DT_1` for component 1, etc.) and optional source row start/end values limit source scanning.
 - Numeric zero in a detail cell is treated as blank.
 - Investment amounts accept numbers or numeric text with commas. Other text is treated as missing.

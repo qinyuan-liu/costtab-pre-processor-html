@@ -29,15 +29,18 @@
     body {
       margin: 0;
       min-height: 100vh;
+      overflow-x: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: Arial, sans-serif;
     }
 
     .shell {
+      width: 100%;
       max-width: 1480px;
       margin: 0 auto;
       padding: 22px 16px 36px;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -169,6 +172,51 @@
       align-items: center;
     }
 
+    .is-hidden {
+      display: none;
+    }
+
+    body.component-mode .mode-subcomponent-only {
+      display: none;
+    }
+
+    .mode-field {
+      align-self: end;
+    }
+
+    .mode-toggle {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      min-height: 36px;
+    }
+
+    .mode-toggle input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mode-toggle span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 104px;
+      padding: 5px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mode-toggle input:checked + span {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
     .th-group {
       display: flex;
       gap: 8px;
@@ -178,7 +226,7 @@
 
     .th-group select {
       width: auto;
-      min-width: 210px;
+      min-width: 170px;
       min-height: 30px;
       padding: 4px 7px;
       font-size: 12px;
@@ -201,7 +249,8 @@
     }
 
     .table-wrap {
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
       border: 1px solid var(--line-strong);
       background: #ffffff;
       max-height: 62vh;
@@ -209,7 +258,6 @@
 
     table {
       width: 100%;
-      min-width: 1320px;
       border-collapse: collapse;
       table-layout: fixed;
       font-size: 13px;
@@ -219,9 +267,10 @@
     td {
       border-bottom: 1px solid var(--line);
       border-right: 1px solid var(--line);
-      padding: 7px;
+      padding: 5px;
       vertical-align: top;
       background: #ffffff;
+      overflow-wrap: anywhere;
     }
 
     thead {
@@ -235,6 +284,64 @@
       background: #f2f4f7;
       text-align: left;
       font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .mapping-table input,
+    .mapping-table select {
+      min-height: 32px;
+      padding: 5px 4px;
+      font-size: 12px;
+    }
+
+    .mapping-table .money-cell select {
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+
+    .mapping-table col.action-col {
+      width: 32px;
+    }
+
+    .mapping-table col.component-text-col {
+      width: calc((100% - 766px) * 0.45);
+    }
+
+    .mapping-table col.subcomponent-text-col {
+      width: calc((100% - 766px) * 0.55);
+    }
+
+    body.component-mode .mapping-table col.component-text-col {
+      width: auto;
+    }
+
+    .mapping-table col.component-column-col,
+    .mapping-table col.subcomponent-column-col {
+      width: 65px;
+    }
+
+    .mapping-table col.letter-col {
+      width: 61px;
+    }
+
+    .mapping-table col.investment-column-col {
+      width: 73px;
+    }
+
+    .mapping-table col.currency-col {
+      width: 83px;
+    }
+
+    .mapping-table col.unit-col {
+      width: 92px;
+    }
+
+    .mapping-table col.source-col {
+      width: 93px;
+    }
+
+    .mapping-table col.row-col {
+      width: 61px;
     }
 
     th:last-child,
@@ -242,34 +349,40 @@
       border-right: 0;
     }
 
-    .component-cell {
-      width: 350px;
-      min-width: 350px;
+    .component-text-cell {
+      width: auto;
     }
 
-    .subcomponent-cell {
-      width: 420px;
-      min-width: 420px;
+    .component-column-cell {
+      width: 54px;
+    }
+
+    .subcomponent-text-cell {
+      width: auto;
+    }
+
+    .subcomponent-column-cell {
+      width: 54px;
     }
 
     .letter-cell {
-      width: 70px;
-      min-width: 70px;
+      width: 50px;
     }
 
     .money-cell {
-      width: 92px;
-      min-width: 92px;
+      width: auto;
     }
 
     .source-cell {
-      width: 128px;
-      min-width: 128px;
+      width: 82px;
+    }
+
+    .row-cell {
+      width: 50px;
     }
 
     .action-cell {
-      width: 38px;
-      min-width: 38px;
+      width: 32px;
       text-align: center;
     }
 
@@ -304,6 +417,14 @@
       grid-template-columns: auto minmax(0, 1fr);
       gap: 6px;
       align-items: start;
+    }
+
+    .readonly-text {
+      min-height: 34px;
+      padding: 8px 0;
+      color: var(--text);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
     }
 
     .inline-check {
@@ -391,6 +512,10 @@
       font-size: 12px;
     }
 
+    .preview-grid .table-wrap {
+      overflow: auto;
+    }
+
     .preview-table th,
     .preview-table td {
       padding: 6px 8px;
@@ -428,6 +553,19 @@
           <input id="projectIdInput" type="text" autocomplete="off" required>
           <div class="error-text" data-error-for="projectIdInput"></div>
         </div>
+        <div class="field mode-field">
+          <label>Mode</label>
+          <div class="mode-toggle" role="radiogroup" aria-label="Mapping mode">
+            <label>
+              <input id="subcomponentModeInput" type="radio" name="mappingMode" value="subcomponent" checked>
+              <span>Subcomponent</span>
+            </label>
+            <label>
+              <input id="componentModeInput" type="radio" name="mappingMode" value="component">
+              <span>Component</span>
+            </label>
+          </div>
+        </div>
         <div id="projectMatchBox" class="project-match"></div>
       </div>
     </section>
@@ -445,7 +583,7 @@
           <input id="componentColumnInput" type="text" maxlength="3" placeholder="For example B" autocomplete="off">
           <div class="error-text" data-error-for="componentColumnInput"></div>
         </div>
-        <div class="field">
+        <div id="subcomponentColumnField" class="field">
           <label for="subcomponentColumnInput">Subcomponent column</label>
           <input id="subcomponentColumnInput" type="text" maxlength="3" placeholder="For example C" autocomplete="off">
           <div class="error-text" data-error-for="subcomponentColumnInput"></div>
@@ -465,12 +603,27 @@
         </div>
 
         <div class="table-wrap">
-          <table>
+          <table class="mapping-table">
+            <colgroup>
+              <col class="action-col">
+              <col class="component-text-col">
+              <col class="component-column-col">
+              <col class="subcomponent-text-col mode-subcomponent-only">
+              <col class="subcomponent-column-col mode-subcomponent-only">
+              <col class="letter-col">
+              <col class="letter-col">
+              <col class="investment-column-col">
+              <col class="currency-col">
+              <col class="unit-col">
+              <col class="source-col">
+              <col class="row-col">
+              <col class="row-col">
+            </colgroup>
             <thead>
               <tr>
                 <th class="action-cell" rowspan="2"></th>
-                <th class="component-cell" rowspan="2">component text</th>
-                <th class="subcomponent-cell" rowspan="2">subcomponent text</th>
+                <th colspan="2">component</th>
+                <th class="mode-subcomponent-only" colspan="2">subcomponent</th>
                 <th colspan="2">detail columns</th>
                 <th colspan="3">
                   <div class="th-group">
@@ -483,13 +636,20 @@
                   <div id="globalBaseWarning" class="base-warning">Please flag this in the tracking file</div>
                 </th>
                 <th class="source-cell" rowspan="2">source tab</th>
+                <th colspan="2">source rows</th>
               </tr>
               <tr>
+                <th class="component-text-cell">text</th>
+                <th class="component-column-cell">column</th>
+                <th class="subcomponent-text-cell mode-subcomponent-only">text</th>
+                <th class="subcomponent-column-cell mode-subcomponent-only">column</th>
                 <th class="letter-cell">start</th>
                 <th class="letter-cell">end</th>
                 <th class="money-cell">column</th>
                 <th class="money-cell">currency</th>
                 <th class="money-cell">unit</th>
+                <th class="row-cell">start</th>
+                <th class="row-cell">end</th>
               </tr>
             </thead>
             <tbody id="mappingBody"></tbody>
@@ -605,9 +765,12 @@
     const els = {
       fileInput: document.getElementById("fileInput"),
       projectIdInput: document.getElementById("projectIdInput"),
+      subcomponentModeInput: document.getElementById("subcomponentModeInput"),
+      componentModeInput: document.getElementById("componentModeInput"),
       projectMatchBox: document.getElementById("projectMatchBox"),
       summarySelect: document.getElementById("summarySelect"),
       summaryError: document.getElementById("summaryError"),
+      subcomponentColumnField: document.getElementById("subcomponentColumnField"),
       componentColumnInput: document.getElementById("componentColumnInput"),
       subcomponentColumnInput: document.getElementById("subcomponentColumnInput"),
       investmentMeasureSelect: document.getElementById("investmentMeasureSelect"),
@@ -628,11 +791,14 @@
       fileName: "",
       sheetNames: [],
       orderedSourceTabs: [],
+      mappingMode: "subcomponent",
       components: [],
       projectMatch: null,
       autoApplied: {
         currency: false,
-        unit: false
+        unit: false,
+        componentColumn: false,
+        subcomponentColumn: false
       },
       lastValidation: null
     };
@@ -640,6 +806,7 @@
     function initialComponents() {
       return [{
         text: "",
+        sourceColumn: "",
         subcomponents: [newSubcomponent()]
       }];
     }
@@ -647,6 +814,7 @@
     function newSubcomponent(overrides = {}) {
       return {
         text: "",
+        textColumn: "",
         detailStart: "D",
         detailEnd: "G",
         totalCol: "",
@@ -654,6 +822,8 @@
         otherCurrency: "",
         unit: "",
         sourceTab: "",
+        sourceStart: "",
+        sourceEnd: "",
         ...overrides
       };
     }
@@ -708,6 +878,12 @@
       els.globalBaseWarning.classList.toggle("show", els.investmentMeasureSelect.value === "Base Cost");
     }
 
+    function syncMappingMode() {
+      state.mappingMode = els.componentModeInput.checked ? "component" : "subcomponent";
+      els.subcomponentColumnField.classList.toggle("is-hidden", state.mappingMode === "component");
+      document.body.classList.toggle("component-mode", state.mappingMode === "component");
+    }
+
     function columnToIndex(column) {
       const value = normalizeColumn(column);
       if (!COLUMN_PATTERN.test(value)) {
@@ -739,7 +915,7 @@
     }
 
     function textTokens(value) {
-      return normalizeCell(value).toLowerCase().match(/m&e|[a-z0-9]+/g) || [];
+      return normalizeCell(value).toLowerCase().match(/m&e|[\p{L}\p{N}]+/gu) || [];
     }
 
     function countPhraseMatches(tokens, phraseTokens) {
@@ -754,16 +930,63 @@
       return count;
     }
 
+    const LANGUAGE_LABELS = {
+      en: {
+        skipExact: ["subtotal", "detailed costs"],
+        skipPrefixes: ["subtotal "],
+        skipIncludes: ["total project costs", "investment costs", "recurrent costs"],
+        headerIncludes: ["detailed costs", "quantities", "unit cost", "financing"],
+        unitExact: ["unit"],
+        projectWarningPhrases: ["project management", "knowledge management", "m&e"]
+      },
+      fr: {
+        skipExact: [],
+        skipPrefixes: [],
+        skipIncludes: [],
+        headerIncludes: [],
+        unitExact: [],
+        projectWarningPhrases: []
+      },
+      es: {
+        skipExact: [],
+        skipPrefixes: [],
+        skipIncludes: [],
+        headerIncludes: [],
+        unitExact: [],
+        projectWarningPhrases: []
+      }
+    };
+
+    function languageTerms(key) {
+      return Object.values(LANGUAGE_LABELS).flatMap((rules) => rules[key] || []);
+    }
+
+    function normalizedLanguageTerms(key) {
+      return languageTerms(key).map((value) => normalizeCell(value).toLowerCase()).filter(Boolean);
+    }
+
+    function textEqualsLanguageTerm(text, key) {
+      return normalizedLanguageTerms(key).includes(text);
+    }
+
+    function textStartsWithLanguageTerm(text, key) {
+      return normalizedLanguageTerms(key).some((term) => text.startsWith(term));
+    }
+
+    function textIncludesLanguageTerm(text, key) {
+      return normalizedLanguageTerms(key).some((term) => text.includes(term));
+    }
+
     function projectManagementWarning(value) {
       const tokens = textTokens(value);
       if (tokens.length === 0) {
         return "";
       }
 
-      const keywordWordCount =
-        countPhraseMatches(tokens, ["project", "management"]) +
-        countPhraseMatches(tokens, ["knowledge", "management"]) +
-        countPhraseMatches(tokens, ["m&e"]);
+      const keywordWordCount = languageTerms("projectWarningPhrases")
+        .map((phrase) => textTokens(phrase))
+        .filter((phraseTokens) => phraseTokens.length > 0)
+        .reduce((total, phraseTokens) => total + countPhraseMatches(tokens, phraseTokens), 0);
 
       if (keywordWordCount > 0 && keywordWordCount / tokens.length > 0.7) {
         return "Please consider removing this subcomponent. Keep it only if it includes costs beyond pure project management.";
@@ -776,35 +999,35 @@
       if (!text) {
         return true;
       }
-      return text === "subtotal" ||
-        text.startsWith("subtotal ") ||
-        text.includes("total project costs") ||
-        text.includes("investment costs") ||
-        text.includes("recurrent costs") ||
-        text === "detailed costs";
+      return textEqualsLanguageTerm(text, "skipExact") ||
+        textStartsWithLanguageTerm(text, "skipPrefixes") ||
+        textIncludesLanguageTerm(text, "skipIncludes");
     }
 
     function isTouchedSubcomponent(sub) {
       return Boolean(
         normalizeCell(sub.text) ||
+        normalizeCell(sub.textColumn) ||
         normalizeCell(sub.totalCol) ||
         normalizeCell(sub.currency) !== "USD" ||
         normalizeCell(sub.otherCurrency) ||
         normalizeCell(sub.unit) ||
-        normalizeCell(sub.sourceTab)
+        normalizeCell(sub.sourceTab) ||
+        normalizeCell(sub.sourceStart) ||
+        normalizeCell(sub.sourceEnd)
       );
     }
 
     function activeComponents() {
       return state.components
         .map((component, componentIndex) => ({
-          component,
-          componentIndex,
-          subcomponents: component.subcomponents
-            .map((subcomponent, subIndex) => ({ subcomponent, subIndex }))
+        component,
+        componentIndex,
+        subcomponents: component.subcomponents
+          .map((subcomponent, subIndex) => ({ subcomponent, subIndex }))
             .filter(({ subcomponent }) => normalizeCell(subcomponent.text) || isTouchedSubcomponent(subcomponent))
-        }))
-        .filter(({ component, subcomponents }) => normalizeCell(component.text) || subcomponents.length > 0);
+      }))
+        .filter(({ component, subcomponents }) => normalizeCell(component.text) || normalizeCell(component.sourceColumn) || subcomponents.length > 0);
     }
 
     function sortSourceTabs(sheetNames) {
@@ -859,7 +1082,7 @@
       const preferred = preferredSummaryTab(tabs);
       els.summarySelect.disabled = tabs.length === 0;
       renderOptions(els.summarySelect, tabs, preferred, tabs.length ? null : "");
-      els.summaryError.classList.toggle("show", tabs.length === 0 && state.workbook !== null);
+      els.summaryError.classList.remove("show");
     }
 
     function renderPreviewSelect() {
@@ -902,26 +1125,36 @@
                 <button class="row-action-button" type="button" title="Insert a blank row below" data-action="insert-row" data-component-index="${componentIndex}" data-sub-index="${subIndex}">+</button>
                 <button class="row-action-button delete-row-button" type="button" title="Delete this row" data-action="delete-row" data-component-index="${componentIndex}" data-sub-index="${subIndex}">-</button>
               </td>
-              <td class="component-cell">
+              <td class="component-text-cell">
                 ${showComponent ? `
                   <div class="component-input">
                     <span class="number-tag">${componentIndex + 1}.</span>
                     <div>
-                      <input id="component-${componentIndex}" data-kind="component-text" data-component-index="${componentIndex}" value="${escapeHtml(component.text)}">
+                      <div id="component-${componentIndex}" class="readonly-text">${escapeHtml(component.text)}</div>
                       <div class="error-text" data-error-for="component-${componentIndex}"></div>
                     </div>
                   </div>
                 ` : ""}
               </td>
-              <td class="subcomponent-cell">
+              <td class="component-column-cell">
+                ${showComponent ? `
+                  <input id="component-column-${componentIndex}" data-kind="component-column" data-component-index="${componentIndex}" value="${escapeHtml(component.sourceColumn || "")}">
+                  <div class="error-text" data-error-for="component-column-${componentIndex}"></div>
+                ` : ""}
+              </td>
+              <td class="subcomponent-text-cell mode-subcomponent-only">
                 <div class="subcomponent-input">
                   <span class="number-tag">${subIndex + 1}.</span>
                   <div>
-                    <input id="subcomponent-${rowId}" data-kind="sub-text" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.text)}">
+                    <div id="subcomponent-${rowId}" class="readonly-text">${escapeHtml(sub.text)}</div>
                     <div class="error-text" data-error-for="subcomponent-${rowId}"></div>
                     <div class="pm-warning" data-pm-warning-for="subcomponent-${rowId}">${escapeHtml(projectManagementWarning(sub.text))}</div>
                   </div>
                 </div>
+              </td>
+              <td class="subcomponent-column-cell mode-subcomponent-only">
+                <input id="subcomponent-column-${rowId}" data-kind="sub-column" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.textColumn || "")}">
+                <div class="error-text" data-error-for="subcomponent-column-${rowId}"></div>
               </td>
               <td class="letter-cell">
                 <input id="detail-start-${rowId}" data-kind="detail-start" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.detailStart)}">
@@ -957,6 +1190,14 @@
                 </select>
                 <div class="error-text" data-error-for="source-tab-${rowId}"></div>
               </td>
+              <td class="row-cell">
+                <input id="source-start-${rowId}" data-kind="source-start" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceStart)}">
+                <div class="error-text" data-error-for="source-start-${rowId}"></div>
+              </td>
+              <td class="row-cell">
+                <input id="source-end-${rowId}" data-kind="source-end" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceEnd)}">
+                <div class="error-text" data-error-for="source-end-${rowId}"></div>
+              </td>
             </tr>
           `);
         });
@@ -976,10 +1217,10 @@
         const component = state.components[componentIndex];
         const sub = component?.subcomponents[subIndex];
 
-        if (kind === "component-text" && component) {
-          component.text = element.value;
-        } else if (kind === "sub-text" && sub) {
-          sub.text = element.value;
+        if (kind === "component-column" && component) {
+          component.sourceColumn = element.value;
+        } else if (kind === "sub-column" && sub) {
+          sub.textColumn = element.value;
         } else if (kind === "detail-start" && sub) {
           sub.detailStart = element.value;
         } else if (kind === "detail-end" && sub) {
@@ -994,6 +1235,10 @@
           sub.unit = element.value;
         } else if (kind === "source-tab" && sub) {
           sub.sourceTab = element.value;
+        } else if (kind === "source-start" && sub) {
+          sub.sourceStart = element.value;
+        } else if (kind === "source-end" && sub) {
+          sub.sourceEnd = element.value;
         }
       });
     }
@@ -1003,7 +1248,10 @@
       if (!component) {
         return;
       }
-      component.subcomponents.splice(subIndex + 1, 0, newSubcomponent());
+      component.subcomponents.splice(subIndex + 1, 0, newSubcomponent({
+        sourceTab: state.mappingMode === "component" ? dtTabForComponent(componentIndex) : ""
+      }));
+      autoPopulateSourceRows();
       state.lastValidation = null;
       els.generateButton.disabled = true;
       renderMappingTable();
@@ -1057,25 +1305,39 @@
     function applyFirstRowValueOnce(kind) {
       const keyByKind = {
         "currency": "currency",
-        "unit": "unit"
+        "unit": "unit",
+        "component-column": "sourceColumn",
+        "sub-column": "textColumn"
       };
       const autoKeyByKind = {
         "currency": "currency",
-        "unit": "unit"
+        "unit": "unit",
+        "component-column": "componentColumn",
+        "sub-column": "subcomponentColumn"
       };
       const key = keyByKind[kind];
       const autoKey = autoKeyByKind[kind];
       const source = state.components[0]?.subcomponents[0];
-      if (!key || !autoKey || !source || state.autoApplied[autoKey] || !normalizeCell(source[key])) {
+      const sourceValue = kind === "component-column" ? state.components[0]?.sourceColumn : source?.[key];
+      if (!key || !autoKey || state.autoApplied[autoKey] || !normalizeCell(sourceValue)) {
         return false;
       }
 
-      state.components.forEach((component) => {
+      state.components.forEach((component, componentIndex) => {
+        if (kind === "component-column") {
+          if (componentIndex !== 0 && !normalizeCell(component.sourceColumn)) {
+            component.sourceColumn = sourceValue;
+          }
+          return;
+        }
         component.subcomponents.forEach((sub, subIndex) => {
           if (component === state.components[0] && subIndex === 0) {
             return;
           }
-          sub[key] = source[key];
+          if (kind === "sub-column" && normalizeCell(sub[key])) {
+            return;
+          }
+          sub[key] = sourceValue;
           if (key === "currency" && source.currency === "Other") {
             sub.otherCurrency = source.otherCurrency;
           }
@@ -1120,14 +1382,231 @@
       }));
     }
 
+    function dtTabForComponent(componentIndex) {
+      const expected = `DT_${componentIndex + 1}`;
+      return state.orderedSourceTabs.find((name) => name.toUpperCase() === expected) ||
+        state.orderedSourceTabs.filter((name) => /^DT_/i.test(name))[componentIndex] ||
+        "";
+    }
+
+    function applySourceTabsByMode() {
+      if (state.mappingMode === "component") {
+        state.components.forEach((component, componentIndex) => {
+          const tab = dtTabForComponent(componentIndex);
+          component.subcomponents.forEach((sub) => {
+            if (!sub.sourceTab || /^DT_/i.test(sub.sourceTab)) {
+              sub.sourceTab = tab;
+            }
+          });
+        });
+        return;
+      }
+
+      const dtTabs = state.orderedSourceTabs.filter((name) => /^DT_/i.test(name));
+      let dtIndex = 0;
+      state.components.forEach((component) => {
+        component.subcomponents.forEach((sub) => {
+          if ((!sub.sourceTab || /^DT_/i.test(sub.sourceTab)) && dtTabs[dtIndex]) {
+            sub.sourceTab = dtTabs[dtIndex];
+          }
+          dtIndex += 1;
+        });
+      });
+    }
+
+    function rowHasInvestmentValue(row, amountIndex, detailStartIndex = null) {
+      if (amountIndex === null || normalizeCell(row[amountIndex]) === "") {
+        return false;
+      }
+      if (detailStartIndex === null) {
+        return true;
+      }
+      return [0, 1, 2, 3].some((offset) => normalizeDetailCell(row[detailStartIndex + offset]));
+    }
+
+    function isSourceRowBoundary(value) {
+      const text = normalizeDetailCell(value);
+      if (!text || isSkipLabel(text)) {
+        return false;
+      }
+      return /^[A-Za-z][.)]\s+/.test(text) || /^[A-Za-z]\.\s*\d/.test(text);
+    }
+
+    function detectSourceRowSegments(subcomponent) {
+      const rows = worksheetToRows(subcomponent.sourceTab);
+      const startIndex = columnToIndex(subcomponent.detailStart);
+      const amountIndex = columnToIndex(subcomponent.totalCol);
+      if (!rows.length || startIndex === null || startIndex < 1 || amountIndex === null) {
+        return [];
+      }
+
+      const markerIndex = startIndex - 1;
+      const allStarts = [];
+      const preferredStarts = [];
+      rows.forEach((row, rowIndex) => {
+        if (rowIndex < 5) {
+          return;
+        }
+        const marker = normalizeDetailCell(row[markerIndex]);
+        if (marker && !isSkipLabel(marker)) {
+          allStarts.push(rowIndex);
+          if (isSourceRowBoundary(marker)) {
+            preferredStarts.push(rowIndex);
+          }
+        }
+      });
+      const starts = preferredStarts.length > 0 ? preferredStarts : allStarts;
+
+      return starts.map((start, index) => {
+        const nextStart = starts[index + 1] ?? rows.length;
+        let end = null;
+        for (let rowIndex = start; rowIndex < nextStart; rowIndex += 1) {
+          if (rowHasInvestmentValue(rows[rowIndex], amountIndex, startIndex)) {
+            end = rowIndex;
+          }
+        }
+        return end === null ? null : { start: start + 1, end: end + 1 };
+      }).filter(Boolean);
+    }
+
+    function autoPopulateSourceRows() {
+      if (state.mappingMode !== "component") {
+        return false;
+      }
+
+      let changed = false;
+      state.components.forEach((component) => {
+        const sourceSubcomponent = component.subcomponents.find((sub) =>
+          normalizeCell(sub.sourceTab) &&
+          columnToIndex(sub.detailStart) !== null &&
+          columnToIndex(sub.totalCol) !== null
+        ) || component.subcomponents[0] || {};
+        const segments = detectSourceRowSegments(sourceSubcomponent);
+        if (segments.length > component.subcomponents.length && normalizeCell(sourceSubcomponent.textColumn)) {
+          while (component.subcomponents.length < segments.length) {
+            component.subcomponents.push(newSubcomponent({
+              textColumn: sourceSubcomponent.textColumn,
+              detailStart: sourceSubcomponent.detailStart,
+              detailEnd: sourceSubcomponent.detailEnd,
+              totalCol: sourceSubcomponent.totalCol,
+              currency: sourceSubcomponent.currency,
+              otherCurrency: sourceSubcomponent.otherCurrency,
+              unit: sourceSubcomponent.unit,
+              sourceTab: sourceSubcomponent.sourceTab
+            }));
+            changed = true;
+          }
+        }
+        component.subcomponents.forEach((sub, subIndex) => {
+          const segment = segments[subIndex];
+          if (!segment) {
+            return;
+          }
+          if (!normalizeCell(sub.sourceStart)) {
+            sub.sourceStart = String(segment.start);
+            changed = true;
+          }
+          if (!normalizeCell(sub.sourceEnd)) {
+            sub.sourceEnd = String(segment.end);
+            changed = true;
+          }
+        });
+      });
+      return changed;
+    }
+
+    function refreshSourceRowInputs() {
+      state.components.forEach((component, componentIndex) => {
+        component.subcomponents.forEach((sub, subIndex) => {
+          const rowId = `${componentIndex}-${subIndex}`;
+          const startInput = document.getElementById(`source-start-${rowId}`);
+          const endInput = document.getElementById(`source-end-${rowId}`);
+          if (startInput) {
+            startInput.value = sub.sourceStart;
+          }
+          if (endInput) {
+            endInput.value = sub.sourceEnd;
+          }
+        });
+      });
+    }
+
+    function firstUsableColumnText(rows, columnIndex, startRowIndex = 0, endRowIndex = rows.length - 1) {
+      for (let rowIndex = Math.max(0, startRowIndex); rowIndex <= Math.min(rows.length - 1, endRowIndex); rowIndex += 1) {
+        const text = normalizeDetailCell(rows[rowIndex]?.[columnIndex]);
+        if (text && !isSkipLabel(text)) {
+          return stripLeadingMarker(text);
+        }
+      }
+      return "";
+    }
+
+    function sourceTabForComponent(component) {
+      return component.subcomponents.find((sub) => normalizeCell(sub.sourceTab))?.sourceTab || "";
+    }
+
+    function fillComponentTextFromSource(component) {
+      const columnIndex = columnToIndex(component.sourceColumn);
+      const sourceTab = sourceTabForComponent(component);
+      if (columnIndex === null || !sourceTab) {
+        return false;
+      }
+
+      const rows = worksheetToRows(sourceTab);
+      const componentLike = rows
+        .map((row, rowIndex) => ({ rowIndex, text: normalizeDetailCell(row[columnIndex]) }))
+        .find((item) => item.text && !isSkipLabel(item.text) && /\bcomponent\b/i.test(item.text));
+      const text = componentLike
+        ? stripLeadingMarker(componentLike.text)
+        : firstUsableColumnText(rows, columnIndex, 5);
+      if (!text || component.text === text) {
+        return false;
+      }
+      component.text = text;
+      return true;
+    }
+
+    function fillSubcomponentTextFromSource(subcomponent) {
+      const columnIndex = columnToIndex(subcomponent.textColumn);
+      if (columnIndex === null || !subcomponent.sourceTab) {
+        return false;
+      }
+
+      const rows = worksheetToRows(subcomponent.sourceTab);
+      const range = sourceRowsRange(subcomponent);
+      const startIndex = range.start === null ? 5 : range.start - 1;
+      const endIndex = range.end === null ? rows.length - 1 : range.end - 1;
+      const text = firstUsableColumnText(rows, columnIndex, startIndex, endIndex);
+      if (!text || subcomponent.text === text) {
+        return false;
+      }
+      subcomponent.text = text;
+      return true;
+    }
+
+    function populateTextFromSourceColumns() {
+      let changed = false;
+      state.components.forEach((component) => {
+        if (normalizeCell(component.sourceColumn)) {
+          changed = fillComponentTextFromSource(component) || changed;
+        }
+        component.subcomponents.forEach((sub) => {
+          if (normalizeCell(sub.textColumn)) {
+            changed = fillSubcomponentTextFromSource(sub) || changed;
+          }
+        });
+      });
+      return changed;
+    }
+
     function populateComponentsFromSummary() {
       const summaryTab = els.summarySelect.value;
       const componentColumn = normalizeColumn(els.componentColumnInput.value);
-      const subcomponentColumn = normalizeColumn(els.subcomponentColumnInput.value);
+      const subcomponentColumn = state.mappingMode === "component" ? "" : normalizeColumn(els.subcomponentColumnInput.value);
       const componentIndex = columnToIndex(componentColumn);
       const subcomponentIndex = columnToIndex(subcomponentColumn);
 
-      if (!summaryTab || componentIndex === null) {
+      if (!summaryTab || !state.workbook?.Sheets[summaryTab] || componentIndex === null) {
         return;
       }
 
@@ -1143,7 +1622,7 @@
         if (componentText && !isSkipLabel(componentText)) {
           currentComponent = stripLeadingMarker(componentText);
           if (!componentByText.has(currentComponent)) {
-            const entry = { text: currentComponent, subcomponents: [] };
+            const entry = { text: currentComponent, sourceColumn: "", subcomponents: [] };
             componentByText.set(currentComponent, entry);
             componentEntries.push(entry);
           }
@@ -1162,21 +1641,16 @@
         return;
       }
 
-      const dtTabs = state.orderedSourceTabs.filter((name) => /^DT_/i.test(name));
-      let dtIndex = 0;
       componentEntries.forEach((component) => {
         if (component.subcomponents.length === 0) {
           component.subcomponents.push(newSubcomponent());
         }
-        component.subcomponents.forEach((sub) => {
-          if (!sub.sourceTab && dtTabs[dtIndex]) {
-            sub.sourceTab = dtTabs[dtIndex];
-            dtIndex += 1;
-          }
-        });
       });
 
       state.components = componentEntries;
+      applySourceTabsByMode();
+      autoPopulateSourceRows();
+      populateTextFromSourceColumns();
       renderMappingTable();
       setStatus("info", `Loaded default component and subcomponent text from ${summaryTab}.`);
     }
@@ -1242,7 +1716,7 @@
         return false;
       }
       const lowered = unitValue.toLowerCase();
-      return lowered !== "unit" && lowered !== " ";
+      return !textEqualsLanguageTerm(lowered, "unitExact");
     }
 
     function isHeaderRow(row, detailIndices) {
@@ -1250,10 +1724,16 @@
       if (!joined) {
         return true;
       }
-      return joined.includes("detailed costs") ||
-        joined.includes("quantities") ||
-        joined.includes("unit cost") ||
-        joined.includes("financing");
+      return textIncludesLanguageTerm(joined, "headerIncludes");
+    }
+
+    function sourceRowsRange(subcomponent) {
+      const start = Number.parseInt(normalizeCell(subcomponent.sourceStart), 10);
+      const end = Number.parseInt(normalizeCell(subcomponent.sourceEnd), 10);
+      return {
+        start: Number.isFinite(start) && start > 0 ? start : null,
+        end: Number.isFinite(end) && end > 0 ? end : null
+      };
     }
 
     function collectRowsForMapping(item, issues = null) {
@@ -1261,6 +1741,7 @@
       const startIndex = columnToIndex(item.subcomponent.detailStart);
       const endIndex = columnToIndex(item.subcomponent.detailEnd);
       const amountIndex = columnToIndex(item.subcomponent.totalCol);
+      const range = sourceRowsRange(item.subcomponent);
       const detailIndices = [];
       const issuePrefix = item.issuePrefix || "Mapping row";
       const issueCounts = {
@@ -1273,10 +1754,13 @@
       }
 
       const output = [];
+      let carriedDetailStart = "";
       rows.forEach((row, rowIndex) => {
         if (rowIndex < 5) {
           return;
         }
+        const rowNumber = rowIndex + 1;
+        const inSourceRange = !((range.start !== null && rowNumber < range.start) || (range.end !== null && rowNumber > range.end));
         if (isHeaderRow(row, detailIndices)) {
           return;
         }
@@ -1292,9 +1776,19 @@
         }
 
         if (!detailValues[0]) {
-          if (issues) {
-            issueCounts.detailStart += 1;
+          if (carriedDetailStart) {
+            detailValues[0] = carriedDetailStart;
+          } else {
+            if (issues && inSourceRange) {
+              issueCounts.detailStart += 1;
+            }
+            return;
           }
+        } else {
+          carriedDetailStart = detailValues[0];
+        }
+
+        if (!inSourceRange) {
           return;
         }
 
@@ -1344,6 +1838,9 @@
     }
 
     async function appendSummarySheet(outputWorkbook) {
+      if (!els.summarySelect.value) {
+        return;
+      }
       if (typeof ExcelJS !== "undefined" && state.fileBuffer) {
         try {
           const inputWorkbook = new ExcelJS.Workbook();
@@ -1384,6 +1881,11 @@
 
     function validate() {
       syncFromDom();
+      applySourceTabsByMode();
+      const tableChanged = autoPopulateSourceRows() || populateTextFromSourceColumns();
+      if (tableChanged) {
+        renderMappingTable();
+      }
       clearValidationMarks();
       const errors = [];
       const warnings = [];
@@ -1402,21 +1904,21 @@
         errors.push("Project ID is not in the embedded costtab pre-process project list.");
       }
 
-      if (!els.summarySelect.value) {
-        setFieldError("summarySelect", NO_SUMMARY_MESSAGE);
-        errors.push(NO_SUMMARY_MESSAGE);
-      }
-
-      [
-        ["componentColumnInput", "Component column must be one or more letters."],
-        ["subcomponentColumnInput", "Subcomponent column must be one or more letters."]
-      ].forEach(([id, message]) => {
-        const value = normalizeCell(els[id].value);
-        if (!value || !COLUMN_PATTERN.test(value)) {
-          setFieldError(id, message);
-          errors.push(message);
+      if (els.summarySelect.value) {
+        const componentColumn = normalizeCell(els.componentColumnInput.value);
+        if (!componentColumn || !COLUMN_PATTERN.test(componentColumn)) {
+          setFieldError("componentColumnInput", "Component column must be one or more letters.");
+          errors.push("Component column must be one or more letters.");
         }
-      });
+
+        if (state.mappingMode !== "component") {
+          const subcomponentColumn = normalizeCell(els.subcomponentColumnInput.value);
+          if (subcomponentColumn && !COLUMN_PATTERN.test(subcomponentColumn)) {
+            setFieldError("subcomponentColumnInput", "Subcomponent column must be one or more letters.");
+            errors.push("Subcomponent column must be one or more letters.");
+          }
+        }
+      }
 
       const active = activeComponents();
       if (active.length === 0) {
@@ -1424,6 +1926,11 @@
       }
 
       active.forEach(({ component, componentIndex, subcomponents }) => {
+        if (normalizeCell(component.sourceColumn) && !COLUMN_PATTERN.test(normalizeCell(component.sourceColumn))) {
+          setFieldError(`component-column-${componentIndex}`, "Component source column must be letters.");
+          errors.push(`Component ${componentIndex + 1}: component source column must be letters.`);
+        }
+
         if (!normalizeCell(component.text)) {
           setFieldError(`component-${componentIndex}`, "Component text is required.");
           errors.push(`Component ${componentIndex + 1}: component text is required.`);
@@ -1440,12 +1947,19 @@
           const rowId = `${componentIndex}-${subIndex}`;
           const prefix = `Component ${componentIndex + 1}, subcomponent ${subIndex + 1}`;
 
-          if (!normalizeCell(subcomponent.text)) {
-            setFieldError(`subcomponent-${rowId}`, "Subcomponent text is required.");
-            errors.push(`${prefix}: subcomponent text is required.`);
-          } else if (wordCount(subcomponent.text) < 2) {
-            setFieldError(`subcomponent-${rowId}`, "Subcomponent text must contain at least 2 words.");
-            errors.push(`${prefix}: subcomponent text must contain at least 2 words.`);
+          if (state.mappingMode !== "component") {
+            if (normalizeCell(subcomponent.textColumn) && !COLUMN_PATTERN.test(normalizeCell(subcomponent.textColumn))) {
+              setFieldError(`subcomponent-column-${rowId}`, "Subcomponent source column must be letters.");
+              errors.push(`${prefix}: subcomponent source column must be letters.`);
+            }
+
+            if (!normalizeCell(subcomponent.text)) {
+              setFieldError(`subcomponent-${rowId}`, "Subcomponent text is required.");
+              errors.push(`${prefix}: subcomponent text is required.`);
+            } else if (wordCount(subcomponent.text) < 2) {
+              setFieldError(`subcomponent-${rowId}`, "Subcomponent text must contain at least 2 words.");
+              errors.push(`${prefix}: subcomponent text must contain at least 2 words.`);
+            }
           }
 
           [
@@ -1488,6 +2002,20 @@
           if (!normalizeCell(subcomponent.sourceTab)) {
             setFieldError(`source-tab-${rowId}`, "Source tab is required.");
             errors.push(`${prefix}: source tab is required.`);
+          }
+
+          const sourceRange = sourceRowsRange(subcomponent);
+          if (normalizeCell(subcomponent.sourceStart) && sourceRange.start === null) {
+            setFieldError(`source-start-${rowId}`, "Source row start must be a positive number.");
+            errors.push(`${prefix}: source row start must be a positive number.`);
+          }
+          if (normalizeCell(subcomponent.sourceEnd) && sourceRange.end === null) {
+            setFieldError(`source-end-${rowId}`, "Source row end must be a positive number.");
+            errors.push(`${prefix}: source row end must be a positive number.`);
+          }
+          if (sourceRange.start !== null && sourceRange.end !== null && sourceRange.end < sourceRange.start) {
+            setFieldError(`source-end-${rowId}`, "Source row end must not be before source row start.");
+            errors.push(`${prefix}: source row end must not be before source row start.`);
           }
 
           if (
@@ -1616,7 +2144,9 @@
       link.remove();
       URL.revokeObjectURL(link.href);
 
-      setStatus("success", `Generated ${costLine - 1} cost lines. Sheet1 and COMFIN were written.`);
+      setStatus("success", els.summarySelect.value
+        ? `Generated ${costLine - 1} cost lines. Sheet1 and COMFIN were written.`
+        : `Generated ${costLine - 1} cost lines. Sheet1 was written.`);
     }
 
     async function readWorkbook(file) {
@@ -1629,6 +2159,7 @@
 
     async function handleFileChange() {
       const file = els.fileInput.files[0];
+      syncMappingMode();
       state.workbook = null;
       state.fileBuffer = null;
       state.fileName = "";
@@ -1637,7 +2168,9 @@
       state.components = initialComponents();
       state.autoApplied = {
         currency: false,
-        unit: false
+        unit: false,
+        componentColumn: false,
+        subcomponentColumn: false
       };
       state.lastValidation = null;
       els.generateButton.disabled = true;
@@ -1671,6 +2204,18 @@
     }
 
     els.fileInput.addEventListener("change", handleFileChange);
+    [els.subcomponentModeInput, els.componentModeInput].forEach((input) => {
+      input.addEventListener("change", () => {
+        syncFromDom();
+        syncMappingMode();
+        applySourceTabsByMode();
+        autoPopulateSourceRows();
+        populateTextFromSourceColumns();
+        state.lastValidation = null;
+        els.generateButton.disabled = true;
+        renderMappingTable();
+      });
+    });
     els.summarySelect.addEventListener("change", () => {
       state.lastValidation = null;
       els.generateButton.disabled = true;
@@ -1723,11 +2268,8 @@
         return;
       }
       syncFromDom();
-      if (target.dataset.kind === "sub-text") {
-        const warningElement = document.querySelector(`[data-pm-warning-for="${CSS.escape(target.id)}"]`);
-        if (warningElement) {
-          warningElement.textContent = projectManagementWarning(target.value);
-        }
+      if (["detail-start", "total-col", "source-tab"].includes(target.dataset.kind) && autoPopulateSourceRows()) {
+        refreshSourceRowInputs();
       }
       state.lastValidation = null;
       els.generateButton.disabled = true;
@@ -1741,17 +2283,26 @@
       syncFromDom();
       const componentIndex = Number.parseInt(target.dataset.componentIndex, 10);
       const subIndex = Number.parseInt(target.dataset.subIndex, 10);
-      const autoApplied = componentIndex === 0 && subIndex === 0
+      const isFirstAutoSource = (target.dataset.kind === "component-column" && componentIndex === 0) ||
+        (target.dataset.kind !== "component-column" && componentIndex === 0 && subIndex === 0);
+      const autoApplied = isFirstAutoSource
         ? applyFirstRowValueOnce(target.dataset.kind)
+        : false;
+      const sourceRowsApplied = ["detail-start", "total-col", "source-tab"].includes(target.dataset.kind)
+        ? autoPopulateSourceRows()
+        : false;
+      const textApplied = ["component-column", "sub-column", "source-start", "source-end", "source-tab"].includes(target.dataset.kind)
+        ? populateTextFromSourceColumns()
         : false;
       state.lastValidation = null;
       els.generateButton.disabled = true;
-      if (autoApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
+      if (autoApplied || sourceRowsApplied || textApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
         renderMappingTable();
       }
     });
 
     state.components = initialComponents();
+    syncMappingMode();
     renderSummarySelect();
     renderPreviewSelect();
     renderMappingTable();
