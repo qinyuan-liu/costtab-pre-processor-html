@@ -2138,7 +2138,10 @@
       const shortName = project.shortName;
       const country = project.country;
       link.href = URL.createObjectURL(blob);
-      link.download = `${country} ${shortName}_formatted_costtab.xlsx`.replace(/[\\/:*?"<>|]+/g, "_");
+      const fileSuffix = state.mappingMode === "component"
+        ? "_formatted_component_harmonized.xlsx"
+        : "_formatted_harmonized.xlsx";
+      link.download = `${country} ${shortName}${fileSuffix}`.replace(/[\\/:*?"<>|]+/g, "_");
       document.body.appendChild(link);
       link.click();
       link.remove();
