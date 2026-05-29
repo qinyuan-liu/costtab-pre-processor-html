@@ -37,18 +37,18 @@ Blocking errors:
 - At least one active component/subcomponent mapping is required. A mapping is active when the component has text, or when a subcomponent has text, an investment column, a non-USD currency, a custom currency, a unit, or a source tab. Editing only detail start/end does not make an otherwise empty row active.
 - Component text is required for every active component and must contain at least 2 words. A leading marker such as `1.` or `A)` is ignored for the word count.
 - Each active component must have at least one active subcomponent.
-- Subcomponent text is required for every active subcomponent and must contain at least 2 words. A leading marker such as `1.` or `A)` is ignored for the word count.
 - Detail start, detail end, and investment columns are required for every active subcomponent and must be Excel column letters only.
 - Detail end must not be before detail start.
 - If currency is `Other`, the custom currency field is required.
 - Unit is required. Supported units in the UI are `million`, `thousand ('000)`, and `unit (1)`.
 - Source tab is required.
 - For each valid source tab mapping, source rows are scanned from row 6 onward. Rows are ignored when they are header rows, empty detail rows, subtotal/total rows, detailed cost labels, or parent rows without unit-like data. Any remaining source row is an error if the first detail column is empty.
-- For each valid source tab mapping, any remaining source row is an error if the investment column is empty, non-numeric, or `0`.
+- For each valid source tab mapping, source rows with an empty or non-numeric investment column are skipped. Investment values of `0` are skipped with a warning: `[提示] Please make sure it is correct.`
 
 Non-blocking warnings:
 
 - If the number of detail columns from detail start through detail end is not exactly 4, the tool warns: `There are N detail columns. Is it correct? Please recheck the costtab and make sure.` Generation is still allowed if there are no blocking errors.
+- Empty subcomponent text warns: `The subcomponent text is empty. Please make sure there is no subcomponent available.`
 - If the investment measure is changed to `Base Cost`, the tool shows `Please flag this in the tracking file`.
 - If more than 70% of a subcomponent's tokens are made up of `project management`, `knowledge management`, or `M&E`, the tool suggests removing it unless it includes costs beyond pure project management.
 
@@ -62,6 +62,6 @@ Source row scanning details:
 - Rows are skipped when any selected detail cell is a skip label: blank, `subtotal`, text beginning with `subtotal `, text containing `total project costs`, text containing `investment costs`, text containing `recurrent costs`, or exactly `detailed costs`.
 - When the first selected detail cell is blank but lower-level detail cells are present, the first detail value is filled down from the previous valid detail start before the row is checked.
 - Language-sensitive labels are centralized in `LANGUAGE_LABELS` in `costtab_pre_processor.html`; French and Spanish dictionaries are scaffolded but empty.
-- In component mode, DT source tabs are assigned by component (`DT_1` for component 1, etc.) and optional source row start/end values limit source scanning.
+- Source row start/end columns are only shown and checked in component mode. In component mode, DT source tabs are assigned by component (`DT_1` for component 1, etc.) and optional source row start/end values limit source scanning.
 - Numeric zero in a detail cell is treated as blank.
 - Investment amounts accept numbers or numeric text with commas. Other text is treated as missing.

@@ -180,6 +180,10 @@
       display: none;
     }
 
+    body:not(.component-mode) .mode-component-only {
+      display: none;
+    }
+
     .mode-field {
       align-self: end;
     }
@@ -304,11 +308,11 @@
     }
 
     .mapping-table col.component-text-col {
-      width: calc((100% - 766px) * 0.45);
+      width: auto;
     }
 
     .mapping-table col.subcomponent-text-col {
-      width: calc((100% - 766px) * 0.55);
+      width: auto;
     }
 
     body.component-mode .mapping-table col.component-text-col {
@@ -616,8 +620,8 @@
               <col class="currency-col">
               <col class="unit-col">
               <col class="source-col">
-              <col class="row-col">
-              <col class="row-col">
+              <col class="row-col mode-component-only">
+              <col class="row-col mode-component-only">
             </colgroup>
             <thead>
               <tr>
@@ -636,7 +640,7 @@
                   <div id="globalBaseWarning" class="base-warning">Please flag this in the tracking file</div>
                 </th>
                 <th class="source-cell" rowspan="2">source tab</th>
-                <th colspan="2">source rows</th>
+                <th class="mode-component-only" colspan="2">source rows</th>
               </tr>
               <tr>
                 <th class="component-text-cell">text</th>
@@ -648,8 +652,8 @@
                 <th class="money-cell">column</th>
                 <th class="money-cell">currency</th>
                 <th class="money-cell">unit</th>
-                <th class="row-cell">start</th>
-                <th class="row-cell">end</th>
+                <th class="row-cell mode-component-only">start</th>
+                <th class="row-cell mode-component-only">end</th>
               </tr>
             </thead>
             <tbody id="mappingBody"></tbody>
@@ -729,13 +733,13 @@
       { id: "1100001651", country: "Kenya", shortName: "KCEP-CRAL" },
       { id: "1100001639", country: "Togo", shortName: "PNPER" },
       { id: "1100001625", country: "Niger", shortName: "PASADEM" },
-      { id: "1100001623", country: "T\u00fcrkiye", shortName: "MRWRP_Murat" },
+      { id: "1100001623", country: "Türkiye", shortName: "MRWRP_Murat" },
       { id: "1100001619", country: "Brazil", shortName: "Paulo Freire Project" },
       { id: "1100001614", country: "Senegal", shortName: "PADAER" },
       { id: "1100001606", country: "Uzbekistan", shortName: "HSP" },
       { id: "1100001595", country: "Honduras", shortName: "Horizontes del Norte" },
       { id: "1100001591", country: "Niger", shortName: "EFSRDP" },
-      { id: "1100001589", country: "C\u00f4te d'Ivoire", shortName: "PROPACOM" },
+      { id: "1100001589", country: "Côte d'Ivoire", shortName: "PROPACOM" },
       { id: "1100001580", country: "Burkina Faso", shortName: "Neer-Tamba Project" },
       { id: "1100001577", country: "Mauritania", shortName: "PASK II" },
       { id: "1100001530", country: "Lesotho", shortName: "SADP" },
@@ -756,10 +760,73 @@
       { id: "1100001241", country: "Comoros", shortName: "NPSHD" },
       { id: "1100001215", country: "El Salvador", shortName: "PREMODER" },
       { id: "1100001152", country: "Gambia (The)", shortName: "PIWAMP" },
-      { id: "1100001089", country: "Mali", shortName: "SADeF Programme" },
+      { id: "1100001089", country: "Mali", shortName: "SADeF  Programme" },
       { id: "1100001073", country: "Syrian Arab Republic", shortName: "Badia Rangelands" },
       { id: "1100001054", country: "Sierra Leone", shortName: "Rehabil.&Community" },
-      { id: "1100000482", country: "Syrian Arab Republic", shortName: "Coastal/Midlands Agricult" }
+      { id: "1100000482", country: "Syrian Arab Republic", shortName: "Coastal/Midlands Agricult" },
+      { id: "2000004669", country: "Senegal", shortName: "FSRP" },
+      { id: "2000004380", country: "Brazil", shortName: "CompensACTION Brazil" },
+      { id: "2000004170", country: "Vanuatu", shortName: "AIMN_VUT" },
+      { id: "2000004169", country: "Solomon Islands", shortName: "AIMN_SLB" },
+      { id: "2000004002", country: "Tunisia", shortName: "DINAMO" },
+      { id: "2000003992", country: "Comoros", shortName: "FORCE-Jeunes" },
+      { id: "2000003934", country: "Rwanda", shortName: "PSAC" },
+      { id: "2000003933", country: "India", shortName: "J&KCIP" },
+      { id: "2000003918", country: "Burkina Faso", shortName: "PSSRC" },
+      { id: "2000003737", country: "India", shortName: "REAP" },
+      { id: "2000003598", country: "Brazil", shortName: "PDHC III" },
+      { id: "2000003549", country: "Burundi", shortName: "PRODER" },
+      { id: "2000003447", country: "Ethiopia", shortName: "PACT" },
+      { id: "2000002980", country: "India", shortName: "Nav Tejaswini" },
+      { id: "2000002869", country: "South Sudan", shortName: "SSLRP" },
+      { id: "2000002673", country: "Ghana", shortName: "PROSPER" },
+      { id: "2000002672", country: "Ghana", shortName: "AAFORD" },
+      { id: "2000002585", country: "Dominican Republic", shortName: "PRORURAL Joven" },
+      { id: "2000002562", country: "Indonesia", shortName: "TEKAD" },
+      { id: "2000002545", country: "Djibouti", shortName: "PGIRE" },
+      { id: "2000002344", country: "Ethiopia", shortName: "RUFIP-III" },
+      { id: "2000002342", country: "Senegal", shortName: "AGRI-JEUNES" },
+      { id: "2000002341", country: "Zimbabwe", shortName: "SACP" },
+      { id: "2000002340", country: "Lesotho", shortName: "ROLL" },
+      { id: "2000002333", country: "Pakistan", shortName: "KP-RETP" },
+      { id: "2000002284", country: "Bolivia (Plurinational State of)", shortName: "ACCESOS RURAL" },
+      { id: "2000002278", country: "Cambodia", shortName: "SAAMBAT" },
+      { id: "2000002253", country: "Brazil", shortName: "PCRP" },
+      { id: "2000002249", country: "Mexico", shortName: "Resilient Balsas Basin" },
+      { id: "2000002247", country: "Haiti", shortName: "I-BE" },
+      { id: "2000002234", country: "Indonesia", shortName: "UPLANDs Project" },
+      { id: "2000002202", country: "Egypt", shortName: "STAR" },
+      { id: "2000002105", country: "Sudan", shortName: "SNRLP" },
+      { id: "2000002075", country: "Tunisia", shortName: "IESS-Kairouan" },
+      { id: "2000002073", country: "Morocco", shortName: "PRODER-Taza" },
+      { id: "2000001892", country: "Lao People's Democratic Republic", shortName: "PICSA" },
+      { id: "2000001813", country: "Bosnia and Herzegovina", shortName: "READP" },
+      { id: "2000001804", country: "Eswatini", shortName: "FINCLUDE" },
+      { id: "2000001616", country: "Senegal", shortName: "PADAER II" },
+      { id: "2000001600", country: "Malawi", shortName: "TRADE" },
+      { id: "2000001577", country: "Iraq", shortName: "SARP" },
+      { id: "2000001530", country: "Argentina", shortName: "PROSAF" },
+      { id: "2000001489", country: "Honduras", shortName: "PROINORTE" },
+      { id: "2000001465", country: "Bangladesh", shortName: "PROVATI" },
+      { id: "2000001409", country: "Türkiye", shortName: "URDP" },
+      { id: "2000001247", country: "Belize", shortName: "Be- Resilient" },
+      { id: "2000001202", country: "Indonesia", shortName: "YESS" },
+      { id: "2000001159", country: "Tunisia", shortName: "PROFITS-Siliana" },
+      { id: "2000001157", country: "Comoros", shortName: "PREFER" },
+      { id: "2000001146", country: "Burundi", shortName: "PIPARV-B" },
+      { id: "2000001132", country: "Kenya", shortName: "ABDP" },
+      { id: "2000001043", country: "Nigeria", shortName: "LIFE-ND" },
+      { id: "2000000899", country: "Papua New Guinea", shortName: "Market Village Farmers (MVF)" },
+      { id: "2000000822", country: "Zambia", shortName: "E-SLIP" },
+      { id: "1100001710", country: "Sierra Leone", shortName: "RFCIP2" },
+      { id: "1100001688", country: "Niger", shortName: "ProDAF MTZD" },
+      { id: "1100001670", country: "Malawi", shortName: "PRIDE" },
+      { id: "1100001658", country: "Democratic Republic of the Congo", shortName: "PASA-NK" },
+      { id: "1100001604", country: "Cabo Verde", shortName: "POSER" },
+      { id: "1100001594", country: "Nigeria", shortName: "VCDP" },
+      { id: "1100001592", country: "Ghana", shortName: "REP" },
+      { id: "1100001542", country: "Syrian Arab Republic", shortName: "ILDP" },
+      { id: "1100001455", country: "Mongolia", shortName: "PMPMD" }
     ];
 
     const els = {
@@ -1148,6 +1215,7 @@
                   <div>
                     <div id="subcomponent-${rowId}" class="readonly-text">${escapeHtml(sub.text)}</div>
                     <div class="error-text" data-error-for="subcomponent-${rowId}"></div>
+                    <div class="warning-text" data-warning-for="subcomponent-${rowId}"></div>
                     <div class="pm-warning" data-pm-warning-for="subcomponent-${rowId}">${escapeHtml(projectManagementWarning(sub.text))}</div>
                   </div>
                 </div>
@@ -1168,6 +1236,7 @@
               <td class="money-cell">
                 <input id="total-col-${rowId}" data-kind="total-col" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.totalCol)}">
                 <div class="error-text" data-error-for="total-col-${rowId}"></div>
+                <div class="warning-text" data-warning-for="total-col-${rowId}"></div>
               </td>
               <td class="money-cell">
                 <select id="currency-${rowId}" data-kind="currency" data-component-index="${componentIndex}" data-sub-index="${subIndex}">
@@ -1190,11 +1259,11 @@
                 </select>
                 <div class="error-text" data-error-for="source-tab-${rowId}"></div>
               </td>
-              <td class="row-cell">
+              <td class="row-cell mode-component-only">
                 <input id="source-start-${rowId}" data-kind="source-start" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceStart)}">
                 <div class="error-text" data-error-for="source-start-${rowId}"></div>
               </td>
-              <td class="row-cell">
+              <td class="row-cell mode-component-only">
                 <input id="source-end-${rowId}" data-kind="source-end" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceEnd)}">
                 <div class="error-text" data-error-for="source-end-${rowId}"></div>
               </td>
@@ -1369,17 +1438,6 @@
       els.previewBody.innerHTML = rows.map((row) => `
         <tr>${Array.from({ length: maxCols }, (_, index) => `<td>${escapeHtml(row[index])}</td>`).join("")}</tr>
       `).join("");
-    }
-
-    function readColumnValues(sheetName, columnLetter) {
-      const columnIndex = columnToIndex(columnLetter);
-      if (columnIndex === null) {
-        return [];
-      }
-      return worksheetToRows(sheetName).map((row, rowIndex) => ({
-        rowIndex,
-        value: normalizeCell(row[columnIndex])
-      }));
     }
 
     function dtTabForComponent(componentIndex) {
@@ -1741,12 +1799,14 @@
       const startIndex = columnToIndex(item.subcomponent.detailStart);
       const endIndex = columnToIndex(item.subcomponent.detailEnd);
       const amountIndex = columnToIndex(item.subcomponent.totalCol);
-      const range = sourceRowsRange(item.subcomponent);
+      const range = state.mappingMode === "component"
+        ? sourceRowsRange(item.subcomponent)
+        : { start: null, end: null };
       const detailIndices = [];
       const issuePrefix = item.issuePrefix || "Mapping row";
       const issueCounts = {
         detailStart: 0,
-        investment: 0
+        investmentZero: 0
       };
 
       for (let index = startIndex; index <= endIndex; index += 1) {
@@ -1806,9 +1866,12 @@
         }
 
         const rawAmount = amountIndex === null ? null : parseAmount(row[amountIndex]);
-        if (rawAmount === null || rawAmount === 0) {
+        if (rawAmount === null) {
+          return;
+        }
+        if (rawAmount === 0) {
           if (issues) {
-            issueCounts.investment += 1;
+            issueCounts.investmentZero += 1;
           }
           return;
         }
@@ -1828,9 +1891,10 @@
           fieldId: item.fieldIds?.detailStart
         });
       }
-      if (issues && issueCounts.investment > 0) {
+      if (issues && issueCounts.investmentZero > 0) {
         issues.push({
-          message: `${issuePrefix}: investment column is empty or 0 in ${issueCounts.investment} rows in ${item.subcomponent.sourceTab}. Please recheck.`,
+          severity: "warning",
+          message: `${issuePrefix}: investment column is 0 in ${issueCounts.investmentZero} rows in ${item.subcomponent.sourceTab}. [提示] Please make sure it is correct.`,
           fieldId: item.fieldIds?.totalCol
         });
       }
@@ -1954,11 +2018,9 @@
             }
 
             if (!normalizeCell(subcomponent.text)) {
-              setFieldError(`subcomponent-${rowId}`, "Subcomponent text is required.");
-              errors.push(`${prefix}: subcomponent text is required.`);
-            } else if (wordCount(subcomponent.text) < 2) {
-              setFieldError(`subcomponent-${rowId}`, "Subcomponent text must contain at least 2 words.");
-              errors.push(`${prefix}: subcomponent text must contain at least 2 words.`);
+              const message = "The subcomponent text is empty. Please make sure there is no subcomponent available.";
+              setFieldWarning(`subcomponent-${rowId}`, message);
+              warnings.push(`${prefix}: ${message}`);
             }
           }
 
@@ -2005,17 +2067,19 @@
           }
 
           const sourceRange = sourceRowsRange(subcomponent);
-          if (normalizeCell(subcomponent.sourceStart) && sourceRange.start === null) {
-            setFieldError(`source-start-${rowId}`, "Source row start must be a positive number.");
-            errors.push(`${prefix}: source row start must be a positive number.`);
-          }
-          if (normalizeCell(subcomponent.sourceEnd) && sourceRange.end === null) {
-            setFieldError(`source-end-${rowId}`, "Source row end must be a positive number.");
-            errors.push(`${prefix}: source row end must be a positive number.`);
-          }
-          if (sourceRange.start !== null && sourceRange.end !== null && sourceRange.end < sourceRange.start) {
-            setFieldError(`source-end-${rowId}`, "Source row end must not be before source row start.");
-            errors.push(`${prefix}: source row end must not be before source row start.`);
+          if (state.mappingMode === "component") {
+            if (normalizeCell(subcomponent.sourceStart) && sourceRange.start === null) {
+              setFieldError(`source-start-${rowId}`, "Source row start must be a positive number.");
+              errors.push(`${prefix}: source row start must be a positive number.`);
+            }
+            if (normalizeCell(subcomponent.sourceEnd) && sourceRange.end === null) {
+              setFieldError(`source-end-${rowId}`, "Source row end must be a positive number.");
+              errors.push(`${prefix}: source row end must be a positive number.`);
+            }
+            if (sourceRange.start !== null && sourceRange.end !== null && sourceRange.end < sourceRange.start) {
+              setFieldError(`source-end-${rowId}`, "Source row end must not be before source row start.");
+              errors.push(`${prefix}: source row end must not be before source row start.`);
+            }
           }
 
           if (
@@ -2039,6 +2103,13 @@
               }
             }, sourceIssues);
             sourceIssues.forEach((issue) => {
+              if (issue.severity === "warning") {
+                if (issue.fieldId) {
+                  setFieldWarning(issue.fieldId, issue.message);
+                }
+                warnings.push(issue.message);
+                return;
+              }
               if (issue.fieldId) {
                 setFieldError(issue.fieldId, "Please recheck.");
               }
