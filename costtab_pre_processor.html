@@ -891,6 +891,12 @@
         sourceTab: "",
         sourceStart: "",
         sourceEnd: "",
+        autoDefaults: {
+          detailStart: "D",
+          detailEnd: "G",
+          totalCol: "",
+          unit: ""
+        },
         ...overrides
       };
     }
@@ -999,18 +1005,16 @@
 
     const LANGUAGE_LABELS = {
       en: {
-        skipExact: ["subtotal", "detailed costs"],
+        skipExact: ["subtotal", "total"],
         skipPrefixes: ["subtotal "],
-        skipIncludes: ["total project costs", "investment costs", "recurrent costs"],
-        headerIncludes: ["detailed costs", "quantities", "unit cost", "financing"],
+        skipIncludes: ["investment costs", "recurrent costs"],
         unitExact: ["unit"],
-        projectWarningPhrases: ["project management", "knowledge management", "m&e"]
+        projectWarningPhrases: ["project management", "programme management", "program management", "knowledge management", "km", "monitoring and evaluation", "m&e"]
       },
       fr: {
         skipExact: [],
         skipPrefixes: [],
         skipIncludes: [],
-        headerIncludes: [],
         unitExact: [],
         projectWarningPhrases: []
       },
@@ -1018,7 +1022,6 @@
         skipExact: [],
         skipPrefixes: [],
         skipIncludes: [],
-        headerIncludes: [],
         unitExact: [],
         projectWarningPhrases: []
       }
@@ -1056,7 +1059,7 @@
         .reduce((total, phraseTokens) => total + countPhraseMatches(tokens, phraseTokens), 0);
 
       if (keywordWordCount > 0 && keywordWordCount / tokens.length > 0.7) {
-        return "Please consider removing this subcomponent. Keep it only if it includes costs beyond pure project management.";
+        return "Please consider removing this section. Keep it only if it includes costs beyond pure project management.";
       }
       return "";
     }
@@ -1149,7 +1152,7 @@
       const preferred = preferredSummaryTab(tabs);
       els.summarySelect.disabled = tabs.length === 0;
       renderOptions(els.summarySelect, tabs, preferred, tabs.length ? null : "");
-      els.summaryError.classList.remove("show");
+      els.summaryError.classList.toggle("show", state.sheetNames.length > 0 && tabs.length === 0);
     }
 
     function renderPreviewSelect() {
@@ -1199,6 +1202,7 @@
                     <div>
                       <div id="component-${componentIndex}" class="readonly-text">${escapeHtml(component.text)}</div>
                       <div class="error-text" data-error-for="component-${componentIndex}"></div>
+                      <div class="pm-warning" data-pm-warning-for="component-${componentIndex}">${escapeHtml(projectManagementWarning(component.text))}</div>
                     </div>
                   </div>
                 ` : ""}
@@ -1320,6 +1324,7 @@
       component.subcomponents.splice(subIndex + 1, 0, newSubcomponent({
         sourceTab: state.mappingMode === "component" ? dtTabForComponent(componentIndex) : ""
       }));
+      applyDetectedDefaults();
       autoPopulateSourceRows();
       state.lastValidation = null;
       els.generateButton.disabled = true;
@@ -1472,6 +1477,220 @@
       });
     }
 
+    function measureMatchesHeader(text, measure) {
+      const header = normalizeCell(text).toLowerCase();
+      const selected = normalizeCell(measure).toLowerCase();
+      if (!header || !selected) {
+        return false;
+      }
+      if (selected === "base cost") {
+        return header.includes("base cost") || header.includes("base costs");
+      }
+      return header.includes(selected);
+    }
+
+    function currencyMatchesHeader(text, subcomponent) {
+      const header = normalizeCell(text).toLowerCase();
+      if (!header) {
+        return false;
+      }
+      if (subcomponent.currency === "USD") {
+        return header.includes("us$") || header.includes("usd");
+      }
+
+      const customCurrency = normalizeCell(subcomponent.otherCurrency).toLowerCase();
+      return (customCurrency && header.includes(customCurrency)) || header.includes("local");
+    }
+
+    function unitFromInvestmentHeader(text) {
+      const header = normalizeCell(text).toLowerCase();
+      if (header.includes("'000") || header.includes("000)")) {
+        return "thousand";
+      }
+      if (header.includes("million")) {
+        return "million";
+      }
+      return "unit";
+    }
+
+    function nextHeaderColumn(row, startIndex) {
+      for (let index = startIndex + 1; index < row.length; index += 1) {
+        if (normalizeCell(row[index])) {
+          return index;
+        }
+      }
+      return row.length;
+    }
+
+    function detectInvestmentDefaults(subcomponent) {
+      const rows = worksheetToRows(subcomponent.sourceTab);
+      const measure = els.investmentMeasureSelect.value || "Totals Including Contingencies";
+      if (!rows.length || !measure) {
+        return { totalCol: "", unit: "" };
+      }
+
+      const maxRows = Math.min(rows.length, 12);
+      for (let rowIndex = 0; rowIndex < maxRows; rowIndex += 1) {
+        const row = rows[rowIndex] || [];
+        for (let colIndex = 0; colIndex < row.length; colIndex += 1) {
+          const header = normalizeCell(row[colIndex]);
+          if (!measureMatchesHeader(header, measure) || !currencyMatchesHeader(header, subcomponent)) {
+            continue;
+          }
+
+          const nextHeader = nextHeaderColumn(row, colIndex);
+          const labelRows = rows.slice(rowIndex + 1, Math.min(rowIndex + 4, rows.length));
+          for (const labelRow of labelRows) {
+            let totalIndex = null;
+            for (let index = colIndex; index < Math.min(nextHeader, labelRow.length); index += 1) {
+              if (normalizeCell(labelRow[index]).toLowerCase() === "total") {
+                totalIndex = index;
+              }
+            }
+            if (totalIndex !== null) {
+              return {
+                totalCol: indexToColumn(totalIndex),
+                unit: unitFromInvestmentHeader(header)
+              };
+            }
+          }
+        }
+      }
+
+      return { totalCol: "", unit: "" };
+    }
+
+    function findInvestmentCostsRow(rows) {
+      const rowLimit = Math.min(rows.length, 20);
+      for (let rowIndex = 0; rowIndex < rowLimit; rowIndex += 1) {
+        const row = rows[rowIndex] || [];
+        const colLimit = Math.min(row.length, 5);
+        for (let colIndex = 0; colIndex < colLimit; colIndex += 1) {
+          if (normalizeCell(row[colIndex]).toLowerCase().includes("investment costs")) {
+            return rowIndex;
+          }
+        }
+      }
+      return null;
+    }
+
+    function isUnitColumn(rows, columnIndex, detailRowIndex) {
+      const topRows = rows.slice(0, Math.min(rows.length, 10));
+      if (topRows.some((row) => normalizeCell(row[columnIndex]).toLowerCase() === "unit")) {
+        return true;
+      }
+
+      const unitLikePattern = /^(ls|pa|p\/m|no\.?|set|monthly|month|unit)$/i;
+      const sampleRows = rows.slice(detailRowIndex, Math.min(rows.length, detailRowIndex + 8));
+      return sampleRows.some((row) => unitLikePattern.test(normalizeCell(row[columnIndex])));
+    }
+
+    function detectDetailDefaults(subcomponent) {
+      const rows = worksheetToRows(subcomponent.sourceTab);
+      const investmentCostsRow = findInvestmentCostsRow(rows);
+      if (investmentCostsRow === null) {
+        return { detailStart: "", detailEnd: "" };
+      }
+
+      for (let rowIndex = investmentCostsRow + 1; rowIndex < Math.min(rows.length, investmentCostsRow + 8); rowIndex += 1) {
+        const row = rows[rowIndex] || [];
+        const startIndex = row.findIndex((value) => normalizeDetailCell(value) && !isSkipLabel(value));
+        if (startIndex === -1) {
+          continue;
+        }
+
+        let endIndex = startIndex + 4;
+        const maxIndex = Math.min(endIndex, Math.max(...rows.map((item) => item.length), row.length) - 1);
+        for (let index = startIndex; index <= maxIndex; index += 1) {
+          if (isUnitColumn(rows, index, rowIndex)) {
+            endIndex = index - 1;
+            break;
+          }
+        }
+
+        if (endIndex >= startIndex) {
+          return {
+            detailStart: indexToColumn(startIndex),
+            detailEnd: indexToColumn(endIndex)
+          };
+        }
+      }
+
+      return { detailStart: "", detailEnd: "" };
+    }
+
+    function canApplyAutoDefault(subcomponent, key) {
+      const current = normalizeCell(subcomponent[key]);
+      const previousAuto = normalizeCell(subcomponent.autoDefaults?.[key]);
+      return !current || current === previousAuto;
+    }
+
+    function setAutoDefault(subcomponent, key, value) {
+      if (!subcomponent.autoDefaults) {
+        subcomponent.autoDefaults = {};
+      }
+      subcomponent[key] = value;
+      subcomponent.autoDefaults[key] = value;
+    }
+
+    function applyDetectedDefaultsToSubcomponent(subcomponent) {
+      if (!normalizeCell(subcomponent.sourceTab) || !state.workbook?.Sheets[subcomponent.sourceTab]) {
+        return false;
+      }
+
+      let changed = false;
+      const detailDefaults = detectDetailDefaults(subcomponent);
+      const investmentDefaults = detectInvestmentDefaults(subcomponent);
+
+      [
+        ["detailStart", detailDefaults.detailStart],
+        ["detailEnd", detailDefaults.detailEnd],
+        ["totalCol", investmentDefaults.totalCol],
+        ["unit", investmentDefaults.unit]
+      ].forEach(([key, value]) => {
+        if (!canApplyAutoDefault(subcomponent, key)) {
+          return;
+        }
+        const nextValue = normalizeCell(value);
+        if (normalizeCell(subcomponent[key]) !== nextValue) {
+          changed = true;
+        }
+        setAutoDefault(subcomponent, key, nextValue);
+      });
+
+      return changed;
+    }
+
+    function applyDetectedDefaults() {
+      let changed = false;
+      state.components.forEach((component) => {
+        component.subcomponents.forEach((subcomponent) => {
+          changed = applyDetectedDefaultsToSubcomponent(subcomponent) || changed;
+        });
+      });
+      return changed;
+    }
+
+    function markUserOverrideForTarget(target) {
+      const keyByKind = {
+        "detail-start": "detailStart",
+        "detail-end": "detailEnd",
+        "total-col": "totalCol",
+        "unit": "unit"
+      };
+      const key = keyByKind[target.dataset.kind];
+      if (!key) {
+        return;
+      }
+
+      const componentIndex = Number.parseInt(target.dataset.componentIndex, 10);
+      const subIndex = Number.parseInt(target.dataset.subIndex, 10);
+      const subcomponent = state.components[componentIndex]?.subcomponents[subIndex];
+      if (subcomponent?.autoDefaults) {
+        subcomponent.autoDefaults[key] = null;
+      }
+    }
+
     function rowHasInvestmentValue(row, amountIndex, detailStartIndex = null) {
       if (amountIndex === null || normalizeCell(row[amountIndex]) === "") {
         return false;
@@ -1550,7 +1769,8 @@
               currency: sourceSubcomponent.currency,
               otherCurrency: sourceSubcomponent.otherCurrency,
               unit: sourceSubcomponent.unit,
-              sourceTab: sourceSubcomponent.sourceTab
+              sourceTab: sourceSubcomponent.sourceTab,
+              autoDefaults: clonePlainObject(sourceSubcomponent.autoDefaults)
             }));
             changed = true;
           }
@@ -1707,6 +1927,7 @@
 
       state.components = componentEntries;
       applySourceTabsByMode();
+      applyDetectedDefaults();
       autoPopulateSourceRows();
       populateTextFromSourceColumns();
       renderMappingTable();
@@ -1768,23 +1989,6 @@
       return text ? `${number}. ${text}` : "";
     }
 
-    function hasUnitLikeCell(row, detailEndIndex) {
-      const unitValue = normalizeCell(row[detailEndIndex + 1]);
-      if (!unitValue) {
-        return false;
-      }
-      const lowered = unitValue.toLowerCase();
-      return !textEqualsLanguageTerm(lowered, "unitExact");
-    }
-
-    function isHeaderRow(row, detailIndices) {
-      const joined = detailIndices.map((index) => normalizeDetailCell(row[index])).filter(Boolean).join(" ").toLowerCase();
-      if (!joined) {
-        return true;
-      }
-      return textIncludesLanguageTerm(joined, "headerIncludes");
-    }
-
     function sourceRowsRange(subcomponent) {
       const start = Number.parseInt(normalizeCell(subcomponent.sourceStart), 10);
       const end = Number.parseInt(normalizeCell(subcomponent.sourceEnd), 10);
@@ -1814,20 +2018,30 @@
       }
 
       const output = [];
-      let carriedDetailStart = "";
+      const carriedDetails = ["", "", "", ""];
       rows.forEach((row, rowIndex) => {
         if (rowIndex < 5) {
           return;
         }
         const rowNumber = rowIndex + 1;
         const inSourceRange = !((range.start !== null && rowNumber < range.start) || (range.end !== null && rowNumber > range.end));
-        if (isHeaderRow(row, detailIndices)) {
-          return;
-        }
 
         const detailValues = detailIndices.slice(0, 4).map((index) => normalizeDetailCell(row[index]));
         while (detailValues.length < 4) {
           detailValues.push("");
+        }
+
+        const rawDetailValues = detailValues.slice();
+        const rawLevels = rawDetailValues
+          .map((value, index) => value ? index : null)
+          .filter((index) => index !== null);
+        if (rawLevels.length > 0) {
+          const branchLevel = Math.min(...rawLevels);
+          for (let index = 0; index < branchLevel; index += 1) {
+            if (!detailValues[index] && carriedDetails[index]) {
+              detailValues[index] = carriedDetails[index];
+            }
+          }
         }
 
         const compact = detailValues.filter(Boolean);
@@ -1835,34 +2049,18 @@
           return;
         }
 
-        if (!detailValues[0]) {
-          if (carriedDetailStart) {
-            detailValues[0] = carriedDetailStart;
-          } else {
-            if (issues && inSourceRange) {
-              issueCounts.detailStart += 1;
-            }
-            return;
+        if (rawLevels.length > 0) {
+          const branchLevel = Math.min(...rawLevels);
+          for (let index = branchLevel; index < carriedDetails.length; index += 1) {
+            carriedDetails[index] = "";
           }
-        } else {
-          carriedDetailStart = detailValues[0];
+          rawLevels.forEach((index) => {
+            carriedDetails[index] = rawDetailValues[index];
+          });
         }
 
         if (!inSourceRange) {
           return;
-        }
-
-        if (!hasUnitLikeCell(row, endIndex)) {
-          const deepest = detailValues.reduce((last, value, index) => value ? index : last, -1);
-          const hasLowerLevelDetail = deepest >= 1;
-          if (!hasLowerLevelDetail) {
-            return;
-          }
-          const nextRows = rows.slice(rowIndex + 1, rowIndex + 4);
-          const sameFirstDetailFollows = nextRows.some((nextRow) => normalizeDetailCell(nextRow[detailIndices[0]]) === detailValues[0]);
-          if (sameFirstDetailFollows) {
-            return;
-          }
         }
 
         const rawAmount = amountIndex === null ? null : parseAmount(row[amountIndex]);
@@ -1872,6 +2070,13 @@
         if (rawAmount === 0) {
           if (issues) {
             issueCounts.investmentZero += 1;
+          }
+          return;
+        }
+
+        if (!detailValues[0]) {
+          if (issues) {
+            issueCounts.detailStart += 1;
           }
           return;
         }
@@ -1946,8 +2151,10 @@
     function validate() {
       syncFromDom();
       applySourceTabsByMode();
-      const tableChanged = autoPopulateSourceRows() || populateTextFromSourceColumns();
-      if (tableChanged) {
+      const defaultsChanged = applyDetectedDefaults();
+      const sourceRowsChanged = autoPopulateSourceRows();
+      const textChanged = populateTextFromSourceColumns();
+      if (defaultsChanged || sourceRowsChanged || textChanged) {
         renderMappingTable();
       }
       clearValidationMarks();
@@ -2233,7 +2440,13 @@
 
     async function handleFileChange() {
       const file = els.fileInput.files[0];
+      els.projectIdInput.value = "";
+      els.componentColumnInput.value = "";
+      els.subcomponentColumnInput.value = "";
+      els.investmentMeasureSelect.value = "Totals Including Contingencies";
       syncMappingMode();
+      updateProjectMatch();
+      updateInvestmentMeasureWarning();
       state.workbook = null;
       state.fileBuffer = null;
       state.fileName = "";
@@ -2247,9 +2460,12 @@
         subcomponentColumn: false
       };
       state.lastValidation = null;
+      clearValidationMarks();
       els.generateButton.disabled = true;
 
       if (!file) {
+        renderSummarySelect();
+        renderPreviewSelect();
         renderMappingTable();
         setStatus("info", "Waiting for a raw costtab file.");
         return;
@@ -2283,6 +2499,7 @@
         syncFromDom();
         syncMappingMode();
         applySourceTabsByMode();
+        applyDetectedDefaults();
         autoPopulateSourceRows();
         populateTextFromSourceColumns();
         state.lastValidation = null;
@@ -2313,7 +2530,12 @@
       els.generateButton.disabled = true;
     });
     els.investmentMeasureSelect.addEventListener("change", () => {
+      syncFromDom();
       updateInvestmentMeasureWarning();
+      const defaultsChanged = applyDetectedDefaults();
+      if (defaultsChanged) {
+        renderMappingTable();
+      }
       state.lastValidation = null;
       els.generateButton.disabled = true;
     });
@@ -2342,6 +2564,7 @@
         return;
       }
       syncFromDom();
+      markUserOverrideForTarget(target);
       if (["detail-start", "total-col", "source-tab"].includes(target.dataset.kind) && autoPopulateSourceRows()) {
         refreshSourceRowInputs();
       }
@@ -2355,12 +2578,16 @@
         return;
       }
       syncFromDom();
+      markUserOverrideForTarget(target);
       const componentIndex = Number.parseInt(target.dataset.componentIndex, 10);
       const subIndex = Number.parseInt(target.dataset.subIndex, 10);
       const isFirstAutoSource = (target.dataset.kind === "component-column" && componentIndex === 0) ||
         (target.dataset.kind !== "component-column" && componentIndex === 0 && subIndex === 0);
       const autoApplied = isFirstAutoSource
         ? applyFirstRowValueOnce(target.dataset.kind)
+        : false;
+      const defaultsApplied = ["source-tab", "currency", "other-currency"].includes(target.dataset.kind)
+        ? applyDetectedDefaults()
         : false;
       const sourceRowsApplied = ["detail-start", "total-col", "source-tab"].includes(target.dataset.kind)
         ? autoPopulateSourceRows()
@@ -2370,7 +2597,7 @@
         : false;
       state.lastValidation = null;
       els.generateButton.disabled = true;
-      if (autoApplied || sourceRowsApplied || textApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
+      if (autoApplied || defaultsApplied || sourceRowsApplied || textApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
         renderMappingTable();
       }
     });

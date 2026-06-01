@@ -1,18 +1,20 @@
 # Costtab Pre-Processor
 
-Local browser tool for converting raw IFAD costtab workbooks into formatted costtab workbooks.
+Local browser tool for converting raw costtab workbooks into formatted costtab workbooks.
 
 ## Use
 
 1. Open `costtab_pre_processor.html` in a browser.
 2. Upload the raw costtab workbook.
 3. Enter the Project ID.
-4. Select the summary tab and component/subcomponent columns.
-5. Review and edit the generated mapping rows.
+4. Select the summary tab and component/subcomponent columns when a summary tab is available.
+5. Review and edit the generated mapping rows. Source tabs, detail columns, investment columns, and units may be auto-filled when the workbook structure is recognized.
 6. Click `Check`.
 7. Click `Generate formatted costtab`.
 
 All Excel processing runs locally in the browser. The workbook is not uploaded anywhere.
+
+Uploading a new workbook clears the previous project ID, summary column inputs, investment measure selection, mapping rows, and validation state.
 
 ## Files
 
@@ -21,6 +23,22 @@ All Excel processing runs locally in the browser. The workbook is not uploaded a
 - `vendor/exceljs.min.js` - local ExcelJS dependency for writing styled Excel files.
 
 Keep the `vendor` folder next to the HTML file.
+
+## Workbook Setup
+
+- Summary tab candidates are workbook sheets whose names include `COM`; `COMFIN` is preferred when present.
+- If no summary tab exists, the tool shows: `No component financing summary found. Please flag this in the tracking file and skip this project.`
+- Component and subcomponent text can be loaded from the summary tab by entering the component and subcomponent column letters.
+- If no summary tab is available, component/subcomponent text can be filled from source tabs by entering source column letters in the mapping table.
+- Source tabs are auto-assigned from `DT_` sheets. In subcomponent mode, DT tabs are assigned sequentially to subcomponents. In component mode, `DT_1` is assigned to component 1, `DT_2` to component 2, and so on.
+
+## Auto-Fill Defaults
+
+- Detail start/end defaults are detected by scanning the top-left area of each source sheet for `Investment Costs`, then looking below it for the first detail row.
+- The default detail range starts at the first non-empty detail cell and initially spans up to five columns. If a `Unit` column is detected within that range, the unit column and following columns are excluded.
+- Investment column and unit defaults are detected from the selected investment measure and currency. For example, `Totals Including Contingencies` plus `USD` looks for the matching `(US$ ...)` group and its `Total` column.
+- `Base Cost` is only auto-filled when a matching `Base Cost` group is found; otherwise the auto-filled investment column and unit stay blank.
+- Auto-filled defaults can be manually overridden. The tool only replaces a default when the field is empty or still equals the previous auto-filled value.
 
 ## Validation Logic
 
@@ -31,8 +49,8 @@ Blocking errors:
 
 - A raw costtab workbook must be selected.
 - Project ID is normalized to digits only and must be present in the embedded project list.
-- A component financing summary tab must be selected. Summary tab candidates are workbook sheets whose names include `COM`; `COMFIN` is preferred when present. If no summary tab exists, the tool shows: `No component financing summary found. Please flag this in the tracking file and skip this project.`
-- Component and subcomponent summary columns must be non-empty Excel column letters only, for example `A`, `D`, or `AA`.
+- If a summary tab is selected, the component summary column must be a non-empty Excel column letter, for example `A`, `D`, or `AA`.
+- If a summary tab is selected in subcomponent mode, the subcomponent summary column is optional, but must be Excel column letters when provided.
 - In component mode, the top-level subcomponent column input is hidden and subcomponent text is not checked. The former subcomponent level in the DT sheet should be treated as the detail start level.
 - At least one active component/subcomponent mapping is required. A mapping is active when the component has text, or when a subcomponent has text, an investment column, a non-USD currency, a custom currency, a unit, or a source tab. Editing only detail start/end does not make an otherwise empty row active.
 - Component text is required for every active component and must contain at least 2 words. A leading marker such as `1.` or `A)` is ignored for the word count.
@@ -42,26 +60,24 @@ Blocking errors:
 - If currency is `Other`, the custom currency field is required.
 - Unit is required. Supported units in the UI are `million`, `thousand ('000)`, and `unit (1)`.
 - Source tab is required.
-- For each valid source tab mapping, source rows are scanned from row 6 onward. Rows are ignored when they are header rows, empty detail rows, subtotal/total rows, detailed cost labels, or parent rows without unit-like data. Any remaining source row is an error if the first detail column is empty.
-- For each valid source tab mapping, source rows with an empty or non-numeric investment column are skipped. Investment values of `0` are skipped with a warning: `[提示] Please make sure it is correct.`
+- For each valid source tab mapping, source rows are scanned from row 6 onward. Rows are ignored when all selected detail cells are empty, when a selected detail cell is a skip label, or when the investment column is empty or non-numeric. Any remaining source row is an error if the first detail column is empty.
 
 Non-blocking warnings:
 
 - If the number of detail columns from detail start through detail end is not exactly 4, the tool warns: `There are N detail columns. Is it correct? Please recheck the costtab and make sure.` Generation is still allowed if there are no blocking errors.
 - Empty subcomponent text warns: `The subcomponent text is empty. Please make sure there is no subcomponent available.`
+- Investment values of `0` are skipped with a warning: `Please make sure it is correct.`
 - If the investment measure is changed to `Base Cost`, the tool shows `Please flag this in the tracking file`.
-- If more than 70% of a subcomponent's tokens are made up of `project management`, `knowledge management`, or `M&E`, the tool suggests removing it unless it includes costs beyond pure project management.
+- If more than 70% of a component or subcomponent's tokens are made up of `project management`, `knowledge management`, `KM`, `monitoring and evaluation`, or `M&E`, the tool suggests removing it unless it includes costs beyond pure project management.
 
-Source row scanning details:
+## Source Row Scanning
 
 - Source rows before row 6 are skipped.
-- A summary tab is optional. If no `COM` tab is available, component/subcomponent text can be filled from source tabs by entering source column letters in the mapping table.
 - Component and subcomponent mapping columns override text loaded from the summary tab when provided.
-- Header rows are skipped when the selected detail columns are empty or include `detailed costs`, `quantities`, `unit cost`, or `financing`.
 - Rows are skipped when all selected detail cells are empty.
-- Rows are skipped when any selected detail cell is a skip label: blank, `subtotal`, text beginning with `subtotal `, text containing `total project costs`, text containing `investment costs`, text containing `recurrent costs`, or exactly `detailed costs`.
-- When the first selected detail cell is blank but lower-level detail cells are present, the first detail value is filled down from the previous valid detail start before the row is checked.
-- Language-sensitive labels are centralized in `LANGUAGE_LABELS` in `costtab_pre_processor.html`; French and Spanish dictionaries are scaffolded but empty.
-- Source row start/end columns are only shown and checked in component mode. In component mode, DT source tabs are assigned by component (`DT_1` for component 1, etc.) and optional source row start/end values limit source scanning.
+- Rows are skipped when any selected detail cell is a skip label: `subtotal`, exactly `total`, text beginning with `subtotal `, text containing `investment costs`, or text containing `recurrent costs`.
+- Detail values are filled down by hierarchy before row output is checked. Parent levels are carried into child rows, but child levels are cleared when a new parent level appears.
+- Source row start/end columns are only shown and checked in component mode. In component mode, optional source row start/end values limit source scanning.
 - Numeric zero in a detail cell is treated as blank.
 - Investment amounts accept numbers or numeric text with commas. Other text is treated as missing.
+- Language-sensitive labels are centralized in `LANGUAGE_LABELS` in `costtab_pre_processor.html`; French and Spanish dictionaries are scaffolded but empty.
