@@ -1058,7 +1058,7 @@
         .filter((phraseTokens) => phraseTokens.length > 0)
         .reduce((total, phraseTokens) => total + countPhraseMatches(tokens, phraseTokens), 0);
 
-      if (keywordWordCount > 0 && keywordWordCount / tokens.length > 0.7) {
+      if (keywordWordCount > 0 && keywordWordCount / tokens.length > 0.49) {
         return "Please consider removing this section. Keep it only if it includes costs beyond pure project management.";
       }
       return "";
