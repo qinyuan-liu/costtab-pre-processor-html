@@ -58,7 +58,7 @@ Blocking errors:
 - If currency is `Other`, the custom currency field is required.
 - Unit is required. Supported units in the UI are `million`, `thousand ('000)`, and `unit (1)`.
 - Source tab is required.
-- For each valid source tab mapping, source rows are scanned from row 6 onward. Rows are ignored when all selected detail cells are empty, when a selected detail cell is a skip label, or when the investment column is empty or non-numeric. Any remaining source row is an error if the first detail column is empty.
+- For each valid source tab mapping, data is scanned from row 6 onward. Rows are ignored when all selected detail cells are empty, when a selected detail cell is a skip label, or when the investment column is empty or non-numeric. Any remaining row is an error if the first detail column is empty.
 
 Non-blocking warnings:
 

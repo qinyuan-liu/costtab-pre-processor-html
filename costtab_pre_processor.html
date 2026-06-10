@@ -344,10 +344,6 @@
       width: 93px;
     }
 
-    .mapping-table col.row-col {
-      width: 61px;
-    }
-
     th:last-child,
     td:last-child {
       border-right: 0;
@@ -379,10 +375,6 @@
 
     .source-cell {
       width: 82px;
-    }
-
-    .row-cell {
-      width: 50px;
     }
 
     .action-cell {
@@ -620,8 +612,6 @@
               <col class="currency-col">
               <col class="unit-col">
               <col class="source-col">
-              <col class="row-col mode-component-only">
-              <col class="row-col mode-component-only">
             </colgroup>
             <thead>
               <tr>
@@ -640,7 +630,6 @@
                   <div id="globalBaseWarning" class="base-warning">Please flag this in the tracking file</div>
                 </th>
                 <th class="source-cell" rowspan="2">source tab</th>
-                <th class="mode-component-only" colspan="2">source rows</th>
               </tr>
               <tr>
                 <th class="component-text-cell">text</th>
@@ -652,8 +641,6 @@
                 <th class="money-cell">column</th>
                 <th class="money-cell">currency</th>
                 <th class="money-cell">unit</th>
-                <th class="row-cell mode-component-only">start</th>
-                <th class="row-cell mode-component-only">end</th>
               </tr>
             </thead>
             <tbody id="mappingBody"></tbody>
@@ -889,8 +876,6 @@
         otherCurrency: "",
         unit: "",
         sourceTab: "",
-        sourceStart: "",
-        sourceEnd: "",
         autoDefaults: {
           detailStart: "D",
           detailEnd: "G",
@@ -1082,9 +1067,7 @@
         normalizeCell(sub.currency) !== "USD" ||
         normalizeCell(sub.otherCurrency) ||
         normalizeCell(sub.unit) ||
-        normalizeCell(sub.sourceTab) ||
-        normalizeCell(sub.sourceStart) ||
-        normalizeCell(sub.sourceEnd)
+        normalizeCell(sub.sourceTab)
       );
     }
 
@@ -1263,14 +1246,6 @@
                 </select>
                 <div class="error-text" data-error-for="source-tab-${rowId}"></div>
               </td>
-              <td class="row-cell mode-component-only">
-                <input id="source-start-${rowId}" data-kind="source-start" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceStart)}">
-                <div class="error-text" data-error-for="source-start-${rowId}"></div>
-              </td>
-              <td class="row-cell mode-component-only">
-                <input id="source-end-${rowId}" data-kind="source-end" data-component-index="${componentIndex}" data-sub-index="${subIndex}" value="${escapeHtml(sub.sourceEnd)}">
-                <div class="error-text" data-error-for="source-end-${rowId}"></div>
-              </td>
             </tr>
           `);
         });
@@ -1308,10 +1283,6 @@
           sub.unit = element.value;
         } else if (kind === "source-tab" && sub) {
           sub.sourceTab = element.value;
-        } else if (kind === "source-start" && sub) {
-          sub.sourceStart = element.value;
-        } else if (kind === "source-end" && sub) {
-          sub.sourceEnd = element.value;
         }
       });
     }
@@ -1325,7 +1296,6 @@
         sourceTab: state.mappingMode === "component" ? dtTabForComponent(componentIndex) : ""
       }));
       applyDetectedDefaults();
-      autoPopulateSourceRows();
       state.lastValidation = null;
       els.generateButton.disabled = true;
       renderMappingTable();
@@ -1691,124 +1661,6 @@
       }
     }
 
-    function rowHasInvestmentValue(row, amountIndex, detailStartIndex = null) {
-      if (amountIndex === null || normalizeCell(row[amountIndex]) === "") {
-        return false;
-      }
-      if (detailStartIndex === null) {
-        return true;
-      }
-      return [0, 1, 2, 3].some((offset) => normalizeDetailCell(row[detailStartIndex + offset]));
-    }
-
-    function isSourceRowBoundary(value) {
-      const text = normalizeDetailCell(value);
-      if (!text || isSkipLabel(text)) {
-        return false;
-      }
-      return /^[A-Za-z][.)]\s+/.test(text) || /^[A-Za-z]\.\s*\d/.test(text);
-    }
-
-    function detectSourceRowSegments(subcomponent) {
-      const rows = worksheetToRows(subcomponent.sourceTab);
-      const startIndex = columnToIndex(subcomponent.detailStart);
-      const amountIndex = columnToIndex(subcomponent.totalCol);
-      if (!rows.length || startIndex === null || startIndex < 1 || amountIndex === null) {
-        return [];
-      }
-
-      const markerIndex = startIndex - 1;
-      const allStarts = [];
-      const preferredStarts = [];
-      rows.forEach((row, rowIndex) => {
-        if (rowIndex < 5) {
-          return;
-        }
-        const marker = normalizeDetailCell(row[markerIndex]);
-        if (marker && !isSkipLabel(marker)) {
-          allStarts.push(rowIndex);
-          if (isSourceRowBoundary(marker)) {
-            preferredStarts.push(rowIndex);
-          }
-        }
-      });
-      const starts = preferredStarts.length > 0 ? preferredStarts : allStarts;
-
-      return starts.map((start, index) => {
-        const nextStart = starts[index + 1] ?? rows.length;
-        let end = null;
-        for (let rowIndex = start; rowIndex < nextStart; rowIndex += 1) {
-          if (rowHasInvestmentValue(rows[rowIndex], amountIndex, startIndex)) {
-            end = rowIndex;
-          }
-        }
-        return end === null ? null : { start: start + 1, end: end + 1 };
-      }).filter(Boolean);
-    }
-
-    function autoPopulateSourceRows() {
-      if (state.mappingMode !== "component") {
-        return false;
-      }
-
-      let changed = false;
-      state.components.forEach((component) => {
-        const sourceSubcomponent = component.subcomponents.find((sub) =>
-          normalizeCell(sub.sourceTab) &&
-          columnToIndex(sub.detailStart) !== null &&
-          columnToIndex(sub.totalCol) !== null
-        ) || component.subcomponents[0] || {};
-        const segments = detectSourceRowSegments(sourceSubcomponent);
-        if (segments.length > component.subcomponents.length && normalizeCell(sourceSubcomponent.textColumn)) {
-          while (component.subcomponents.length < segments.length) {
-            component.subcomponents.push(newSubcomponent({
-              textColumn: sourceSubcomponent.textColumn,
-              detailStart: sourceSubcomponent.detailStart,
-              detailEnd: sourceSubcomponent.detailEnd,
-              totalCol: sourceSubcomponent.totalCol,
-              currency: sourceSubcomponent.currency,
-              otherCurrency: sourceSubcomponent.otherCurrency,
-              unit: sourceSubcomponent.unit,
-              sourceTab: sourceSubcomponent.sourceTab,
-              autoDefaults: clonePlainObject(sourceSubcomponent.autoDefaults)
-            }));
-            changed = true;
-          }
-        }
-        component.subcomponents.forEach((sub, subIndex) => {
-          const segment = segments[subIndex];
-          if (!segment) {
-            return;
-          }
-          if (!normalizeCell(sub.sourceStart)) {
-            sub.sourceStart = String(segment.start);
-            changed = true;
-          }
-          if (!normalizeCell(sub.sourceEnd)) {
-            sub.sourceEnd = String(segment.end);
-            changed = true;
-          }
-        });
-      });
-      return changed;
-    }
-
-    function refreshSourceRowInputs() {
-      state.components.forEach((component, componentIndex) => {
-        component.subcomponents.forEach((sub, subIndex) => {
-          const rowId = `${componentIndex}-${subIndex}`;
-          const startInput = document.getElementById(`source-start-${rowId}`);
-          const endInput = document.getElementById(`source-end-${rowId}`);
-          if (startInput) {
-            startInput.value = sub.sourceStart;
-          }
-          if (endInput) {
-            endInput.value = sub.sourceEnd;
-          }
-        });
-      });
-    }
-
     function firstUsableColumnText(rows, columnIndex, startRowIndex = 0, endRowIndex = rows.length - 1) {
       for (let rowIndex = Math.max(0, startRowIndex); rowIndex <= Math.min(rows.length - 1, endRowIndex); rowIndex += 1) {
         const text = normalizeDetailCell(rows[rowIndex]?.[columnIndex]);
@@ -1851,10 +1703,7 @@
       }
 
       const rows = worksheetToRows(subcomponent.sourceTab);
-      const range = sourceRowsRange(subcomponent);
-      const startIndex = range.start === null ? 5 : range.start - 1;
-      const endIndex = range.end === null ? rows.length - 1 : range.end - 1;
-      const text = firstUsableColumnText(rows, columnIndex, startIndex, endIndex);
+      const text = firstUsableColumnText(rows, columnIndex, 5, rows.length - 1);
       if (!text || subcomponent.text === text) {
         return false;
       }
@@ -1928,7 +1777,6 @@
       state.components = componentEntries;
       applySourceTabsByMode();
       applyDetectedDefaults();
-      autoPopulateSourceRows();
       populateTextFromSourceColumns();
       renderMappingTable();
       setStatus("info", `Loaded default component and subcomponent text from ${summaryTab}.`);
@@ -1989,23 +1837,11 @@
       return text ? `${number}. ${text}` : "";
     }
 
-    function sourceRowsRange(subcomponent) {
-      const start = Number.parseInt(normalizeCell(subcomponent.sourceStart), 10);
-      const end = Number.parseInt(normalizeCell(subcomponent.sourceEnd), 10);
-      return {
-        start: Number.isFinite(start) && start > 0 ? start : null,
-        end: Number.isFinite(end) && end > 0 ? end : null
-      };
-    }
-
     function collectRowsForMapping(item, issues = null) {
       const rows = worksheetToRows(item.subcomponent.sourceTab);
       const startIndex = columnToIndex(item.subcomponent.detailStart);
       const endIndex = columnToIndex(item.subcomponent.detailEnd);
       const amountIndex = columnToIndex(item.subcomponent.totalCol);
-      const range = state.mappingMode === "component"
-        ? sourceRowsRange(item.subcomponent)
-        : { start: null, end: null };
       const detailIndices = [];
       const issuePrefix = item.issuePrefix || "Mapping row";
       const issueCounts = {
@@ -2023,9 +1859,6 @@
         if (rowIndex < 5) {
           return;
         }
-        const rowNumber = rowIndex + 1;
-        const inSourceRange = !((range.start !== null && rowNumber < range.start) || (range.end !== null && rowNumber > range.end));
-
         const detailValues = detailIndices.slice(0, 4).map((index) => normalizeDetailCell(row[index]));
         while (detailValues.length < 4) {
           detailValues.push("");
@@ -2057,10 +1890,6 @@
           rawLevels.forEach((index) => {
             carriedDetails[index] = rawDetailValues[index];
           });
-        }
-
-        if (!inSourceRange) {
-          return;
         }
 
         const rawAmount = amountIndex === null ? null : parseAmount(row[amountIndex]);
@@ -2152,9 +1981,8 @@
       syncFromDom();
       applySourceTabsByMode();
       const defaultsChanged = applyDetectedDefaults();
-      const sourceRowsChanged = autoPopulateSourceRows();
       const textChanged = populateTextFromSourceColumns();
-      if (defaultsChanged || sourceRowsChanged || textChanged) {
+      if (defaultsChanged || textChanged) {
         renderMappingTable();
       }
       clearValidationMarks();
@@ -2271,22 +2099,6 @@
           if (!normalizeCell(subcomponent.sourceTab)) {
             setFieldError(`source-tab-${rowId}`, "Source tab is required.");
             errors.push(`${prefix}: source tab is required.`);
-          }
-
-          const sourceRange = sourceRowsRange(subcomponent);
-          if (state.mappingMode === "component") {
-            if (normalizeCell(subcomponent.sourceStart) && sourceRange.start === null) {
-              setFieldError(`source-start-${rowId}`, "Source row start must be a positive number.");
-              errors.push(`${prefix}: source row start must be a positive number.`);
-            }
-            if (normalizeCell(subcomponent.sourceEnd) && sourceRange.end === null) {
-              setFieldError(`source-end-${rowId}`, "Source row end must be a positive number.");
-              errors.push(`${prefix}: source row end must be a positive number.`);
-            }
-            if (sourceRange.start !== null && sourceRange.end !== null && sourceRange.end < sourceRange.start) {
-              setFieldError(`source-end-${rowId}`, "Source row end must not be before source row start.");
-              errors.push(`${prefix}: source row end must not be before source row start.`);
-            }
           }
 
           if (
@@ -2500,7 +2312,6 @@
         syncMappingMode();
         applySourceTabsByMode();
         applyDetectedDefaults();
-        autoPopulateSourceRows();
         populateTextFromSourceColumns();
         state.lastValidation = null;
         els.generateButton.disabled = true;
@@ -2565,9 +2376,6 @@
       }
       syncFromDom();
       markUserOverrideForTarget(target);
-      if (["detail-start", "total-col", "source-tab"].includes(target.dataset.kind) && autoPopulateSourceRows()) {
-        refreshSourceRowInputs();
-      }
       state.lastValidation = null;
       els.generateButton.disabled = true;
     });
@@ -2589,15 +2397,12 @@
       const defaultsApplied = ["source-tab", "currency", "other-currency"].includes(target.dataset.kind)
         ? applyDetectedDefaults()
         : false;
-      const sourceRowsApplied = ["detail-start", "total-col", "source-tab"].includes(target.dataset.kind)
-        ? autoPopulateSourceRows()
-        : false;
-      const textApplied = ["component-column", "sub-column", "source-start", "source-end", "source-tab"].includes(target.dataset.kind)
+      const textApplied = ["component-column", "sub-column", "source-tab"].includes(target.dataset.kind)
         ? populateTextFromSourceColumns()
         : false;
       state.lastValidation = null;
       els.generateButton.disabled = true;
-      if (autoApplied || defaultsApplied || sourceRowsApplied || textApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
+      if (autoApplied || defaultsApplied || textApplied || target.dataset.kind === "currency" || target.dataset.kind === "unit") {
         renderMappingTable();
       }
     });
