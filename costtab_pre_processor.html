@@ -880,7 +880,8 @@
           detailStart: "D",
           detailEnd: "G",
           totalCol: "",
-          unit: ""
+          unit: "",
+          sourceTab: ""
         },
         ...overrides
       };
@@ -1422,13 +1423,27 @@
         "";
     }
 
+    function canApplyAutoSourceTab(subcomponent) {
+      const current = normalizeCell(subcomponent.sourceTab);
+      const previousAuto = normalizeCell(subcomponent.autoDefaults?.sourceTab);
+      return !current || current === previousAuto;
+    }
+
+    function setAutoSourceTab(subcomponent, value) {
+      if (!subcomponent.autoDefaults) {
+        subcomponent.autoDefaults = {};
+      }
+      subcomponent.sourceTab = value;
+      subcomponent.autoDefaults.sourceTab = value;
+    }
+
     function applySourceTabsByMode() {
       if (state.mappingMode === "component") {
         state.components.forEach((component, componentIndex) => {
           const tab = dtTabForComponent(componentIndex);
           component.subcomponents.forEach((sub) => {
-            if (!sub.sourceTab || /^DT_/i.test(sub.sourceTab)) {
-              sub.sourceTab = tab;
+            if (canApplyAutoSourceTab(sub)) {
+              setAutoSourceTab(sub, tab);
             }
           });
         });
@@ -1439,8 +1454,8 @@
       let dtIndex = 0;
       state.components.forEach((component) => {
         component.subcomponents.forEach((sub) => {
-          if ((!sub.sourceTab || /^DT_/i.test(sub.sourceTab)) && dtTabs[dtIndex]) {
-            sub.sourceTab = dtTabs[dtIndex];
+          if (dtTabs[dtIndex] && canApplyAutoSourceTab(sub)) {
+            setAutoSourceTab(sub, dtTabs[dtIndex]);
           }
           dtIndex += 1;
         });
@@ -1646,7 +1661,8 @@
         "detail-start": "detailStart",
         "detail-end": "detailEnd",
         "total-col": "totalCol",
-        "unit": "unit"
+        "unit": "unit",
+        "source-tab": "sourceTab"
       };
       const key = keyByKind[target.dataset.kind];
       if (!key) {
